@@ -9,5 +9,5 @@ if __name__ == "__main__":
     parser.add_argument("--test")
     args = parser.parse_args()
     system = System()
-    system.manually_classify(args.train)
+    system.manually_classify_circles(args.train)
     # system.test(args.test)

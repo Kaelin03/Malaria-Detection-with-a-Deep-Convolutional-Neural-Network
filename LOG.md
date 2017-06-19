@@ -11,6 +11,29 @@ This is a log of any tasks completed throughout the project.
 > * Machine Learning with Template Matching.
 > Talk to Dr. Phil Culverhouse about his Plankton detection/classification. 
 
+07/06/2017
+----------
+> Read and summarised relavent literature
+
+> Researched and installed TensorFlow and Keras.
+
+> Installed OpenCV.
+
+
+08/06/2017
+----------
+> Read Keras and Tensor Flow documentation
+
+09/06/2017
+----------
+> Theorised improvements to current RBC detection method.
+> * A simple coverage check does not differentiat between RBCs and WBCs.
+> * I will use a SVM to discard circles that are actually detecting WBCs. 
+
+12/06/2017
+----------
+> Down time - computer issues. 
+
 15/06/2017
 ----------
 > Understood the maing principles of Convolutional Neural Networks.
@@ -22,9 +45,6 @@ This is a log of any tasks completed throughout the project.
 -----------
 > Setup automatic backup system with versioning and synced laptop and desktop. 
 
-> Install TensorFlow and Keras.
-
-> Install OpenCV.
 
 17/06/2017
 ----------

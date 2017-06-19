@@ -19,11 +19,11 @@ class System(object):
         self._samples = []
         self._results = pd.DataFrame()
 
-    def manually_classify(self, file):
+    def manually_classify_circles(self, file):
         if os.path.isfile(file):
             self._load_training_samples(file)
             for image_path in self._train_dict["images"]:
-                self._cell_detector.find_rbc(image_path)
+                self._cell_detector.manually_classify_circles(image_path)
 
     def test(self, file):
         if os.path.isfile(file):

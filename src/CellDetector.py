@@ -8,13 +8,13 @@ class CellDetector(object):
         self._rbc = None
         self._wbc = None
 
-    def find_wbc(self):
+    def manually_classify_circles(self, image_path):
+        
+
+
+    def find_wbc(self, image_path):
         pass
 
     def find_rbc(self, image_path):
+        pass
 
-
-    def run(self):
-        self.find_rbc()
-        self.find_wbc()
-        return {"rbc": self._rbc, "wbc": self._wbc}
