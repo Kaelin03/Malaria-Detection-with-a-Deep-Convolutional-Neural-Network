@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+import cv2
 
-class Detector(object):
+class CellDetector(object):
 
     def __init__(self):
         self._rbc = None
@@ -10,8 +11,8 @@ class Detector(object):
     def find_wbc(self):
         pass
 
-    def find_rbc(self):
-        pass
+    def find_rbc(self, image_path):
+
 
     def run(self):
         self.find_rbc()

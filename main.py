@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from System import System
+from src.System import System
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -9,4 +9,5 @@ if __name__ == "__main__":
     parser.add_argument("--test")
     args = parser.parse_args()
     system = System()
-    system.test(args.test)
+    system.manually_classify(args.train)
+    # system.test(args.test)
