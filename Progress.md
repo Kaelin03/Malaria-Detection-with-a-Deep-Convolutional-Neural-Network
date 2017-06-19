@@ -14,18 +14,22 @@ This is a log of any tasks completed throughout the project.
 15/06/2017
 ----------
 > Understood the maing principles of Convolutional Neural Networks.
+
 > Develop a theoretical framework for using a CNN for Malaria detection. 
 
 
 16/06/20187
 -----------
 > Setup automatic backup system with versioning and synced laptop and desktop. 
+
 > Install TensorFlow and Keras.
+
 > Install OpenCV.
 
 17/06/2017
 ----------
 > Read Prof. Dik Morling's papers on Malaria Detection.
+
 > Read about MalaDiag.
 
 19/06/2017
