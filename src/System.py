@@ -12,27 +12,29 @@ from src.Classifier import Classifier
 
 class System(object):
 
-    def __init__(self):
-        self._cell_detector = CellDetector()
+    def __init__(self, config):
+        self._cell_detector = CellDetector(config["cell_detector_config"])
         self._classifier = Classifier()
-        self._train_dict = []
+        self._training_images = []
         self._samples = []
         self._results = pd.DataFrame()
 
     def manually_classify_circles(self, file):
         if os.path.isfile(file):
             self._load_training_samples(file)
-            for image_path in self._train_dict["images"]:
+            for image_path in self._training_images:
                 self._cell_detector.manually_classify_circles(image_path)
+        else:
+            print("Warning: " + file + " is not a file.")
 
     def test(self, file):
         if os.path.isfile(file):
             self._set_test_samples(file)
         else:
-            if file is not None:
-                print("Warning: " + file + " is not a file.")
-            else:
+            if file is None:
                 print("Warning: No test information given")
+            else:
+                print("Warning: " + file + " is not a file.")
 
     def _set_test_samples(self, file):
         # Given an yaml file
@@ -58,7 +60,8 @@ class System(object):
         # Given a yaml file
         # Loads the sample images into a dictionary
         with open(file) as file:
-            self._train_dict = yaml.load(file)
+            self._training_images = yaml.load(file)["images"]
+        print("Successfully loaded " + str(len(self._training_images)) + " training image(s).")
 
     def _sample_index(self, sample_id):
         # Given a sample name

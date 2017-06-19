@@ -1,0 +1,9 @@
+kernel_size:
+  - 5
+  - 5
+rbc_tolerance:
+  - 1
+rbc_radius:
+  - 3.5
+min_rbc_dist:
+  - 0
