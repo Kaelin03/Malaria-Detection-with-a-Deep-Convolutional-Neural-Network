@@ -20,6 +20,8 @@ class System(object):
         self._results = pd.DataFrame()
 
     def manually_classify_circles(self, file):
+        #
+        #
         if os.path.isfile(file):
             self._load_training_samples(file)
             for image_path in self._training_images:
@@ -28,6 +30,8 @@ class System(object):
             print("Warning: " + file + " is not a file.")
 
     def test(self, file):
+        #
+        #
         if os.path.isfile(file):
             self._set_test_samples(file)
         else:
@@ -45,13 +49,13 @@ class System(object):
         for image_path in test_dict["images"]:
             if os.path.isfile(image_path):                                      # If the path exists
                 sample_id = helpers.get_sample_id(image_path)                   # Extract sample id from sample path
-                sample_index = self._sample_index(sample_id)                    # Get index of the sample
+                sample_index = self._get_sample_index(sample_id)                # Get index of the sample
                 if sample_index != -1:                                          # If the sample already exists
-                    self._samples[sample_index].add_image(image_path)      # Add the image to the sample
+                    self._samples[sample_index].add_image(image_path)           # Add the image to the sample
                 else:
                     sample = Sample(sample_id)                                  # Initialise a new sample object
                     sample.add_image(image_path)                                # Add new image to the sample
-                    self._samples.append(sample)                           # Append sample to list of samples
+                    self._samples.append(sample)                                # Append sample to list of samples
             else:
                 print("Warning: " + image_path + " is not a file.")
         print("Successfully loaded " + str(len(self._samples)) + " sample(s).")
@@ -63,7 +67,7 @@ class System(object):
             self._training_images = yaml.load(file)["images"]
         print("Successfully loaded " + str(len(self._training_images)) + " training image(s).")
 
-    def _sample_index(self, sample_id):
+    def _get_sample_index(self, sample_id):
         # Given a sample name
         # Returns the index of the sample if it exists
         # Returns -1 if the sample does not exist

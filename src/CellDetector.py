@@ -12,18 +12,18 @@ import yaml
 class CellDetector(object):
 
     def __init__(self, config_name=""):
-        self._rbc = None
-        self._wbc = None
-        self._kernel_size = None
-        self._min_rbc_rad = None
-        self._max_rbc_rad = None
-        self._min_rbc_dist = None
-        self._rbc_tolerance = None
-        self._config_path = "config/" + config_name
-        self._configured = False
+        self._rbc = []                                  # List of detected red blood cells
+        self._wbc = []                                  # List of detected white blood cells
+        self._kernel_size = None                        # Tuple of odd integers for Gaussian blur kernel
+        self._min_rbc_rad = None                        # Minimum expected radius of red blood cells
+        self._max_rbc_rad = None                        # Maximum expected radius of red blood cells
+        self._min_rbc_dist = None                       # Minimum accepted distance between red blood cell centres
+        self._config_path = "config/" + config_name     # Path to CellDetector config yaml
+        self._configured = False                        # Flag to notify if the detector is configured or not
         self.configure()
 
     def configure(self):
+        # Reads the config yaml and updates the parameters accordingly
         if self._config_path:
             if os.path.isfile(self._config_path):
                 with open("config/cell_detector.yaml") as file:
@@ -40,9 +40,11 @@ class CellDetector(object):
         # Given a path to an image
         # Displays each circle detected in sequence for manual classification
         image = cv2.imread(image_path)
-        circles = self._hough_transform(image)
+        circles = self._hough_circles(image)
 
-    def _hough_transform(self, image):
+    def _hough_circles(self, image):
+        # Given an image
+        # Performs Hough circle transform and returns a list of positions and radii
         circles = []
         if self._configured:
             image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)                        # Convert to grayscale
@@ -61,12 +63,18 @@ class CellDetector(object):
         return circles
 
     def find_wbc(self, image_path):
+        #
+        #
         pass
 
     def find_rbc(self, image_path):
+        #
+        #
         pass
 
     def _set_parameters(self, config_dict):
+        # Given a dictionary of configurations
+        # Calculates the parameters for cell detection
         self._kernel_size = tuple(config_dict["kernel_size"])
         rbc_tol = config_dict["rbc_tolerance"][0]
         rbc_rad = config_dict["rbc_radius"][0]
