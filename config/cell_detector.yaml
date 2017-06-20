@@ -1,14 +1,25 @@
+# PARAMETERS FOR CELL DETECTOR
+
 kernel_size:
   # Kernel size for applying Gaussian blur
-  # Must be positive, odd integers
+  # Must be up to 2 positive, odd integers
   # If only one number is given, the kernel will be assumed square
   - 5
 rbc_tol:
   # Tolerance in micrometers of red blood cell radius
-  - 1
+  - 0.5
 rbc_rad:
   # Radius of a red blood cell in micrometers
   - 3.5
 rbc_min_dist:
   # Will be set automatically if zero. 
   - 0
+pixels_per_micrometer:
+  # The number of pixels in each micrometer of image
+  - 10
+rbc_positives:
+  # Path to directory containing images of red blood cells
+  - "training/red_blood_cells/positives"
+rbc_negatives:
+  # Path to directory containing images that are not red blood cells
+  - "training/red_blood_cells/negatives"

@@ -8,8 +8,11 @@ def main(args):
     system_config = {"cell_detector_config": args.cell_detector_config,
                      "classifier_config": args.classifier_config}
     system = System(system_config)
-    system.manually_classify_circles(args.train)
-    # system.test(args.test)
+    system.load_training_samples(args.train)
+    system.load_test_samples(args.test)
+    # system.manually_classify_circles()
+    system.train_cell_detector()
+    system.detect_rbc()
 
 
 if __name__ == "__main__":

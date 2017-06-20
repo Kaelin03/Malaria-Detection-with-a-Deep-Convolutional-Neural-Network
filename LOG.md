@@ -4,7 +4,9 @@ This is a log of any tasks completed throughout the project.
 
 20/06/2017
 ----------
-> Train a SVM using colour histograms from manually classified cells.
+> Implement a method to check if each circle given by Hough's Circle Transform contains a RBC.
+> * Trained a SVM using colour histograms to test each circle.
+> * Tested the method.
 
 19/06/2017
 ----------

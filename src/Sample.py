@@ -14,6 +14,10 @@ class Sample(object):
         # Initialises new Image object and appends to list of images
         self._images.append(Image(image_path))
 
+    def get_images(self):
+        # Returns the list of images
+        return self._images
+
     def get_id(self):
         # Returns the name of the sample
         return self._id

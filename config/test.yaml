@@ -1,0 +1,18 @@
+# PATHS TO TEST IMAGES
+
+images:
+  - "samples/test/test_01_01.jpg"
+  - "samples/test/test_01_02.jpg"
+  - "samples/test/test_01_03.jpg"
+  - "samples/test/test_01_04.jpg"
+  - "samples/test/test_01_05.jpg"
+  - "samples/test/test_01_06.jpg"
+  - "samples/test/test_01_07.jpg"
+  - "samples/test/test_01_08.jpg"
+  - "samples/test/test_01_09.jpg"
+  - "samples/test/test_01_10.jpg"
+  - "samples/test/test_01_11.jpg"
+  - "samples/test/test_01_12.jpg"
+  - "samples/test/test_01_13.jpg"
+  - "samples/test/test_01_14.jpg"
+  - "samples/test/test_01_15.jpg"
