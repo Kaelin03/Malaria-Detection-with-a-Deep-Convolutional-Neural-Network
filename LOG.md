@@ -4,6 +4,7 @@ This is a log of any tasks completed throughout the project.
 
 20/06/2017
 ----------
+> Train a SVM using colour histograms from manually classified cells.
 
 19/06/2017
 ----------

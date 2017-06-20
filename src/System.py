@@ -13,7 +13,8 @@ from src.Classifier import Classifier
 class System(object):
 
     def __init__(self, config):
-        self._cell_detector = CellDetector(config["cell_detector_config"])
+        self._cell_detector = CellDetector()
+        self._cell_detector.configure(config["cell_detector_config"])
         self._classifier = Classifier()
         self._training_images = []
         self._samples = []

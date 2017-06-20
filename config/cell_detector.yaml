@@ -1,9 +1,14 @@
 kernel_size:
+  # Kernel size for applying Gaussian blur
+  # Must be positive, odd integers
+  # If only one number is given, the kernel will be assumed square
   - 5
-  - 5
-rbc_tolerance:
+rbc_tol:
+  # Tolerance in micrometers of red blood cell radius
   - 1
-rbc_radius:
+rbc_rad:
+  # Radius of a red blood cell in micrometers
   - 3.5
-min_rbc_dist:
+rbc_min_dist:
+  # Will be set automatically if zero. 
   - 0
