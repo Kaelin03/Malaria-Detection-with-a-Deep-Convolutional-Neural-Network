@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from src.Image import Image
+from Image import Image
 
 
 class Sample(object):

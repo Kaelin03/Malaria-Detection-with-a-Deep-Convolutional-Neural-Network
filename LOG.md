@@ -2,11 +2,25 @@
 
 This is a log of any tasks completed throughout the project.
 
+21/06/2017
+----------
+> Refactor code:
+> * Move main to src directory.
+> * Re-write _load_samples method.
+> * Load samples automatically.
+> * Configure CellDetector and Classifier automatically.
+> * All config files are given to DiagnosisSystem on initialisation.
+
+> Implement coverage check in CellDetector.
+
+> Implement a combination of SVM and coverage check to remove false RBC detections. 
+
 20/06/2017
 ----------
 > Implement a method to check if each circle given by Hough's Circle Transform contains a RBC.
 > * Trained a SVM using colour histograms to test each circle.
 > * Tested the method.
+> * Decided that a simple coverage check may be required before hand.
 
 19/06/2017
 ----------

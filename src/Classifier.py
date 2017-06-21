@@ -5,7 +5,7 @@ from keras.models import Sequential
 
 class Classifier(object):
 
-    def __init__(self):
+    def __init__(self, config):
         self.model = Sequential()
 
     def run(self):

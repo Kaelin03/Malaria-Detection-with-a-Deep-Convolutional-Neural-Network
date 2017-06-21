@@ -5,21 +5,18 @@ kernel_size:
   # Must be up to 2 positive, odd integers
   # If only one number is given, the kernel will be assumed square
   - 5
-rbc_tol:
+rbc_tolerance:
   # Tolerance in micrometers of red blood cell radius
   - 0.5
-rbc_rad:
+rbc_radius:
   # Radius of a red blood cell in micrometers
   - 3.5
-rbc_min_dist:
+rbc_min_distance:
   # Will be set automatically if zero. 
   - 0
 pixels_per_micrometer:
   # The number of pixels in each micrometer of image
   - 10
-rbc_positives:
-  # Path to directory containing images of red blood cells
-  - "training/red_blood_cells/positives"
-rbc_negatives:
-  # Path to directory containing images that are not red blood cells
-  - "training/red_blood_cells/negatives"
+area_threshold:
+  # Percentage of the circle that can not be white
+  - 65
