@@ -12,11 +12,12 @@ rbc_radius:
   # Radius of a red blood cell in micrometers
   - 3.5
 rbc_min_distance:
+  # Minimum permissible distance between red blood cell centres
   # Will be set automatically if zero. 
   - 0
 pixels_per_micrometer:
-  # The number of pixels in each micrometer of image
+  # The number of pixels for each micrometer of image
   - 10
 area_threshold:
-  # Percentage of the circle that can not be white
+  # Percentage of the circle that should contant a cell
   - 65

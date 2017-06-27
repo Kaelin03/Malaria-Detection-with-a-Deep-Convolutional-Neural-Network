@@ -2,9 +2,37 @@
 
 This is a log of any tasks completed throughout the project.
 
+Keywords:
+* CNN = Convolutional Neural Network
+* RBC = Red Blood Cell
+* SVM = Support Vector Machine
+
+28/06/2017
+----------
+
+> 
+
+
+27/06/2017
+----------
+> Write interim report
+
+> Submit interim report
+
+> Followed Keras tutorial
+> Implemented a MLP deep learning model in Keras for NMIST
+
+26/06/2017
+----------
+> Still writing Interim Report
+
+25/06/2017
+----------
+> Began writing Interim Report
+
 21/06/2017
 ----------
-> Refactor code:
+> Refactored code:
 > * Move main to src directory.
 > * Re-write _load_samples method.
 > * Load samples automatically.
@@ -15,12 +43,19 @@ This is a log of any tasks completed throughout the project.
 
 > Implement a combination of SVM and coverage check to remove false RBC detections. 
 
+> TODO: 
+> * Build and test a CNN.
+> * Collect more samples.
+> * Test cell detector on all new samples. 
+
 20/06/2017
 ----------
 > Implement a method to check if each circle given by Hough's Circle Transform contains a RBC.
 > * Trained a SVM using colour histograms to test each circle.
 > * Tested the method.
 > * Decided that a simple coverage check may be required before hand.
+
+> Next: refactor code. 
 
 19/06/2017
 ----------
