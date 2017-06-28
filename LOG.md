@@ -10,7 +10,12 @@ Keywords:
 28/06/2017
 ----------
 
-> 
+> Followed Keras tutorial
+> Implemented a CNN deep learning model in Keras for CIFAR-10
+
+> TODO:
+> * Collect at least 10 more images from 57546
+> * Build custom CNN for cell diagnosis
 
 
 27/06/2017
@@ -21,6 +26,8 @@ Keywords:
 
 > Followed Keras tutorial
 > Implemented a MLP deep learning model in Keras for NMIST
+
+> Collected 11 images from sample MaMic database sample 57546
 
 26/06/2017
 ----------
