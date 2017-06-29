@@ -6,36 +6,43 @@ Keywords:
 * CNN = Convolutional Neural Network
 * RBC = Red Blood Cell
 * SVM = Support Vector Machine
+* MPL = Multi-Layer Perceptron
+
+29/06/2017
+----------
+
+> Implementing CNN for cell classification. 
+> * Write function to train the CNN.
+> * Write function to evaluate the CNN.
+> * Write function to test unclassified images.
+
+> Write code to aid manual classification of cells.
 
 28/06/2017
 ----------
 
-> Followed Keras tutorial
-> Implemented a CNN deep learning model in Keras for CIFAR-10
+> Followed Keras tutorial.
+> Implemented a CNN deep learning model in Keras for CIFAR-10.
 
-> TODO:
-> * Collect at least 10 more images from 57546
-> * Build custom CNN for cell diagnosis
+> Collected sample images from 57546.
 
 
 27/06/2017
 ----------
-> Write interim report
+> Write interim report.
 
-> Submit interim report
+> Submit interim report.
 
-> Followed Keras tutorial
-> Implemented a MLP deep learning model in Keras for NMIST
-
-> Collected 11 images from sample MaMic database sample 57546
+> Followed Keras tutorial.
+> Implemented a MLP deep learning model in Keras for NMIST.
 
 26/06/2017
 ----------
-> Still writing Interim Report
+> Still writing Interim Report.
 
 25/06/2017
 ----------
-> Began writing Interim Report
+> Began writing Interim Report.
 
 21/06/2017
 ----------

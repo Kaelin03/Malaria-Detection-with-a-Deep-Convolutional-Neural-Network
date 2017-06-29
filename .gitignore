@@ -1,6 +1,9 @@
 # Other
 .idea
-logs
+models
+results
+test
+train
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

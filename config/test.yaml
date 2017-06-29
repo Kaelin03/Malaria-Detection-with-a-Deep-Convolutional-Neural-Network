@@ -1,18 +1,10 @@
-# PATHS TO TEST IMAGES
+# PATHS TO SAMPLE IMAGES FOR TESTING
 
 images:
-  - "test/test_01_01.jpg"
-  - "test/test_01_02.jpg"
-  - "test/test_01_03.jpg"
-  - "test/test_01_04.jpg"
-  - "test/test_01_05.jpg"
-  - "test/test_01_06.jpg"
-  - "test/test_01_07.jpg"
-  - "test/test_01_08.jpg"
-  - "test/test_01_09.jpg"
-  - "test/test_01_10.jpg"
-  - "test/test_01_11.jpg"
-  - "test/test_01_12.jpg"
-  - "test/test_01_13.jpg"
-  - "test/test_01_14.jpg"
-  - "test/test_01_15.jpg"
+  # Paths to individual images
+  # - "test/samples/57546/57546_23.jpg"
+  - "test/samples/57546/57546_24.jpg"
+
+directories: 
+  # Paths to directories of images
+  # - "test/samples/57546"

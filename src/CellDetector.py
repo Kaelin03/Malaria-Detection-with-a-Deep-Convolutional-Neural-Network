@@ -33,7 +33,7 @@ class CellDetector(object):
             img = self._pre_process(img)                                            # Pre-process for Hough Circles
             circles = self._hough_circles(img)                                      # Detect circles
             for circle in circles:
-                coverage = get_coverage(img, circle)                                # Check coverage of each circle
+                coverage = self.get_coverage(img, circle)                           # Check coverage of each circle
                 if coverage > self._area_threshold:                                 # If coverage is above the threshold
                     cells.append(Cell(circle[0:2], circle[2]))                      # Append a new cell object
             print(str(len(cells)) + " cells found.")
@@ -139,6 +139,28 @@ class CellDetector(object):
         circles = circles.tolist()                                                  # Convert np array to list
         return circles                                                              # Return list of circles
 
+    @staticmethod
+    def get_coverage(img, circle):
+        # Given an image and a circle
+        # Returns the percentage of pixels in the circle that are black
+        height, width = img.shape  # Dimensions of image
+        x = int(circle[0])  # X-coordinate of circe centre
+        y = int(circle[1])  # Y-coordinate of circle centre
+        rad = int(circle[2])  # Radius of circle
+        black = 0  # Total number of black pixels
+        non_black = 0  # Total number of non-black pixels
+        for i in range(x - rad, x + rad + 1):  # For each pixel in the x-direction
+            for j in range(y - rad, y + rad + 1):  # For each pixel in the y-direction
+                in_image = 0 <= j < height and 0 <= i < width  # The point is in the image
+                in_circle = pythagoras((i - x), (j - y)) < rad  # The point is in the circle
+                if in_image and in_circle:  # If in the image and in the circle
+                    if img[j][i] == 0:  # If point is black
+                        black += 1  # Add to total black pixels
+                    else:  # If point is not black
+                        non_black += 1  # Add one to total non_black pixels
+        percentage = black / float(black + non_black) * 100  # Percentage of black pixels
+        return percentage
+
 
 def pythagoras(a, b):
     # Given two numbers, returns pythagoras
@@ -146,23 +168,3 @@ def pythagoras(a, b):
     return c
 
 
-def get_coverage(img, circle):
-    # Given an image and a circle
-    # Returns the percentage of pixels in the circle that are black
-    height, width = img.shape                                                       # Dimensions of image
-    x = int(circle[0])                                                              # X-coordinate of circe centre
-    y = int(circle[1])                                                              # Y-coordinate of circle centre
-    rad = int(circle[2])                                                            # Radius of circle
-    black = 0                                                                       # Total number of black pixels
-    non_black = 0                                                                   # Total number of non-black pixels
-    for i in range(x - rad, x + rad + 1):                                           # For each pixel in the x-direction
-        for j in range(y - rad, y + rad + 1):                                       # For each pixel in the y-direction
-            in_image = 0 <= j < height and 0 <= i < width                           # The point is in the image
-            in_circle = pythagoras((i - x), (j - y)) < rad                          # The point is in the circle
-            if in_image and in_circle:                                              # If in the image and in the circle
-                if img[j][i] == 0:                                                  # If point is black
-                    black += 1                                                      # Add to total black pixels
-                else:                                                               # If point is not black
-                    non_black += 1                                                  # Add one to total non_black pixels
-    percentage = black / float(black + non_black) * 100                             # Percentage of black pixels
-    return percentage

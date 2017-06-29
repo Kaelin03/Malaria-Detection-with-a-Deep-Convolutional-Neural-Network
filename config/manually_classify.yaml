@@ -1,0 +1,28 @@
+# PATHS TO IMAGES OF SAMPLES TO BE MANUALLY CLASSIFIED
+# Images can be for training or testing
+
+train: 
+
+  files:
+    # Paths to individual images
+    - "train/samples/57546/57546_01.jpg"
+
+  directories:
+    # Paths to directories of images
+    - "train/samples/57546"
+
+  destination:
+    - "test/cells"
+
+test: 
+
+  files:
+    # Paths to individual images
+    - "test/samples/57546/57546_24.jpg"
+
+  directories:
+    # Paths to directories of images
+    # -"samples/test/57546"
+
+  destination: 
+    - "test/cells"

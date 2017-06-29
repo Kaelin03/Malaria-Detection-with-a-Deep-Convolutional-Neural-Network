@@ -48,7 +48,7 @@ X_train /= 255                                              # Normalise data in 
 X_test /= 255                                               # Normalise data in range [0, 1]
 
 Y_train = np_utils.to_categorical(Y_train, num_classes)     # One-hot encode the labels
-Y_test = np_utils.to_categorical(Y_test, num_classes)      # One-hot encode the labels
+Y_test = np_utils.to_categorical(Y_test, num_classes)       # One-hot encode the labels
 
 """
 3. Define the model
@@ -110,5 +110,6 @@ print("\n")
 for name, score in zip(* (model.metrics_names, scores)):
     print(name + ": " + str(round(score, 5)))
 
-
-
+filepath = "../models/MNIST.h5"
+model.save(filepath=filepath)
+print("Model saved as " + filepath)
