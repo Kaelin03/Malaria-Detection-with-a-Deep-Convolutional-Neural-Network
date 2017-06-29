@@ -56,23 +56,27 @@ class DiagnosisSystem(object):
             image_width = yaml_dict["image_width"]                              # Width to crop cell images to
             train_images = self._load_images(train_dirs, train_files)           # Load training image paths
             test_images = self._load_images(test_dirs, test_files)              # Load test image paths
-            for image in train_images:                                          # For each training image
-                cells = self._cell_detector.run(image)                          # Detect cells
-                image.add_cells(cells)                                          # Add cells to image
-                img = image.get_image()                                         # Get image
-                image.draw_cells(img)                                           # Draw cells on image
-                cv2.imshow(image.get_name(), cv2.resize(img, (0, 0),
-                                                        fx=0.25, fy=0.25))      # Resize and show image
-                cv2.waitKey(0)                                                  # Wait for keypress
-                cv2.destroyAllWindows()                                         # Destroy window
-                for cell in image.get_cells():                                  # For every cell
-                    img = self._crop_to_cell(image.get_image(), cell,
-                                             dx=image_width, dy=image_height)   # Crop to cell centre and a given size
-                    cv2.imshow("cell", img)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+            self._detect_and_show(train_images, image_width, image_height)      # Detect cells and show user
+            self._detect_and_show(test_images, image_width, image_height)       # Detect cells and show user
         else:
             print("Warning: " + yaml_name + " not found.")
+
+    def _detect_and_show(self, images, image_width=0, image_height=0):
+        for image in images:                                                    # For each image
+            cells = self._cell_detector.run(image)                              # Detect cells
+            image.add_cells(cells)                                              # Add cells to image
+            img = image.get_image()                                             # Get image
+            image.draw_cells(img)                                               # Draw cells on image
+            cv2.imshow(image.get_name(), cv2.resize(img, (0, 0),
+                                                    fx=0.25, fy=0.25))          # Resize and show image
+            cv2.waitKey(0)                                                      # Wait for keypress
+            cv2.destroyAllWindows()                                             # Destroy window
+            for cell in image.get_cells():                                      # For every cell
+                img = self._crop_to_cell(image.get_image(), cell,
+                                         dx=image_width, dy=image_height)       # Crop to cell centre and a given size
+                cv2.imshow("Cell", img)                                         # Show cell to user
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
     def _load_images(self, directories, files):
         # Given a list of directories and a list of image file paths
@@ -93,7 +97,7 @@ class DiagnosisSystem(object):
         if not dy:
             dy = cell.get_radius() * 2
         height, width, _ = image.shape                                          # Get height and width of original image
-        x1 = int(max(cell.get_position()[0] - dx / 2, 0))            # Calculate bounding box coordinates
+        x1 = int(max(cell.get_position()[0] - dx / 2, 0))                       # Calculate bounding box coordinates
         y1 = int(max(cell.get_position()[1] - dy / 2, 0))
         x2 = int(min(cell.get_position()[0] + dx / 2, width))
         y2 = int(min(cell.get_position()[1] + dy / 2, height))
