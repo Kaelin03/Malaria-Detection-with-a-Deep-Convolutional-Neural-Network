@@ -35,19 +35,19 @@ class Classifier(object):
             with open(config_path) as file:
                 config_dict = yaml.load(file)
             try:
-                self._set_batch_size(config_dict["batch_size"][0])                  # Set batch size
+                self._set_batch_size(config_dict["batch_size"])                     # Set batch size
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: batch_size not found.")
             try:
-                self._set_num_epochs(config_dict["num_epochs"][0])                  # Set number of epochs
+                self._set_num_epochs(config_dict["num_epochs"])                     # Set number of epochs
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: num_epochs not found.")
             try:
-                self._set_kernel_size(config_dict["kernel_size"][0])                # Set kernel_size
+                self._set_kernel_size(config_dict["kernel_size"])                   # Set kernel_size
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: kernel_size not found.")
             try:
-                self._set_pool_size(config_dict["pool_size"][0])                    # Set pool_size
+                self._set_pool_size(config_dict["pool_size"])                       # Set pool_size
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: pool_size not found.")
             try:
@@ -59,7 +59,7 @@ class Classifier(object):
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: drop_prob not found.")
             try:
-                self._set_hidden_size(config_dict["hidden_size"][0])                  # Set hidden size
+                self._set_hidden_size(config_dict["hidden_size"])                   # Set hidden size
             except KeyError:                                                        # Key may not be in config_dict
                 print("Warning: hidden_size not found.")
             print("Done.")

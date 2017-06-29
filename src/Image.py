@@ -16,6 +16,15 @@ class Image(object):
         # Add a new cell object to cells
         self._cells.append(cell)
 
+    def add_cells(self, cells):
+        # Add a list of new cell objects to cells
+        for cell in cells:
+            self.add_cell(cell)
+
+    def draw_cells(self, img, col=(0, 255, 0), width=2):
+        for cell in self._cells:
+            cell.draw(img, col, width)
+
     def get_cells(self):
         # Returns list of cell objects associated with the image
         return self._cells

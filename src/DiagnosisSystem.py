@@ -52,17 +52,25 @@ class DiagnosisSystem(object):
             test_dirs = yaml_dict["test"]["directories"]                        # List of test dirs
             train_files = yaml_dict["train"]["files"]                           # List of training images
             test_files = yaml_dict["test"]["files"]                             # List of test images
+            image_height = yaml_dict["image_height"]                            # Height to crop cell images to
+            image_width = yaml_dict["image_width"]                              # Width to crop cell images to
             train_images = self._load_images(train_dirs, train_files)           # Load training image paths
             test_images = self._load_images(test_dirs, test_files)              # Load test image paths
             for image in train_images:                                          # For each training image
                 cells = self._cell_detector.run(image)                          # Detect cells
-                for cell in cells:                                              # For each cell
-                    image.add_cell(cell)                                        # Add cell object to image
-            for image in test_images:                                           # For each test image
-                cells = self._cell_detector.run(image)                          # Detect cells
-                for cell in cells:                                              # For each cell
-                    image.add_cells(cell)                                       # Add cell to object image
-            # TODO: Show cells for manual classification
+                image.add_cells(cells)                                          # Add cells to image
+                img = image.get_image()                                         # Get image
+                image.draw_cells(img)                                           # Draw cells on image
+                cv2.imshow(image.get_name(), cv2.resize(img, (0, 0),
+                                                        fx=0.25, fy=0.25))      # Resize and show image
+                cv2.waitKey(0)                                                  # Wait for keypress
+                cv2.destroyAllWindows()                                         # Destroy window
+                for cell in image.get_cells():                                  # For every cell
+                    img = self._crop_to_cell(image.get_image(), cell,
+                                             dx=image_width, dy=image_height)   # Crop to cell centre and a given size
+                    cv2.imshow("cell", img)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
         else:
             print("Warning: " + yaml_name + " not found.")
 
@@ -77,6 +85,19 @@ class DiagnosisSystem(object):
         image_paths = set(image_paths)                                          # Remove any duplicates
         images = [Image(path) for path in image_paths]                          # Create an image object for each path
         return images                                                           # Return image paths
+
+    @staticmethod
+    def _crop_to_cell(image, cell, dx=0, dy=0):
+        if not dx:
+            dx = cell.get_radius() * 2
+        if not dy:
+            dy = cell.get_radius() * 2
+        height, width, _ = image.shape                                          # Get height and width of original image
+        x1 = int(max(cell.get_position()[0] - dx / 2, 0))            # Calculate bounding box coordinates
+        y1 = int(max(cell.get_position()[1] - dy / 2, 0))
+        x2 = int(min(cell.get_position()[0] + dx / 2, width))
+        y2 = int(min(cell.get_position()[1] + dy / 2, height))
+        return image[y1:y2, x1:x2, :]                                           # Return a cropped image
 
     @staticmethod
     def _check_images(images):
@@ -133,4 +154,3 @@ class DiagnosisSystem(object):
             print("Warning: no image name found in " + image_path + ".")
             sample_id = False
         return sample_id
-

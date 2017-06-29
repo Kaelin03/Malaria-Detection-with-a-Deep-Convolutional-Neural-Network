@@ -1,6 +1,14 @@
 # PATHS TO IMAGES OF SAMPLES TO BE MANUALLY CLASSIFIED
 # Images can be for training or testing
 
+image_height:
+  # Height to crop images to
+  90
+
+image_width:
+  # Width to crop images to
+  90
+
 train: 
 
   files:
@@ -26,3 +34,4 @@ test:
 
   destination: 
     - "test/cells"
+
