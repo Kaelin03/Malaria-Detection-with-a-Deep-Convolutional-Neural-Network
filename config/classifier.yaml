@@ -12,9 +12,22 @@ kernel_size:
   # Kernel size to be used throughout
   3           
 
+hidden_size:    
+  # Number of nerons in the fully-connected layer
+  512
+
 pool_size:     
    # Pooling size to be used throughout
-  2           
+  2    
+
+image_height:
+  80
+
+image_width:
+  80
+
+image_depth:
+  3       
 
 conv_depth:
   - 32          # Initial number of kernels in the convolutional layer
@@ -23,15 +36,3 @@ conv_depth:
 drop_prob:
   - 0.25        # Probability of dropout after pooling
   - 0.5         # Probability of dropout in the fully-connected layer
-
-hidden_size:    
-  # Number of nerons in the fully-connected layer
-  512
-
-image_width:    
-  # Width of images
-  90
-
-image_height:   
-  # Height of iamges
-  90

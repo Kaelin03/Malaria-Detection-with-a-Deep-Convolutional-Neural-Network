@@ -13,18 +13,25 @@ class DiagnosisSystem(object):
 
     def __init__(self, config):
         self._config = config
-        self._train_cells = None                                            # Cell images for CNN training
-        self._evaluation_cells = None                                       # Cell images for CNN evaluation
-        self._samples = None                                                # Samples to manually classify
-        self._test_samples = None                                           # Samples for testing
-        self._cell_detector = CellDetector(config["cell_detector"])         # Initialise the cell detector
-        self._classifier = Classifier(config["classifier"])                 # Initialise classifier
+        self._train_cells = None                                                # Cell images for CNN training
+        self._evaluation_cells = None                                           # Cell images for CNN evaluation
+        self._samples = None                                                    # Samples to manually classify
+        self._test_samples = None                                               # Samples for testing
+        self._cell_detector = CellDetector(config["cell_detector"])             # Initialise the cell detector
+        self._classifier = Classifier(config["classifier"])                     # Initialise classifier
 
     def train(self):
+        yaml_name = self._config["train"]
+        yaml_path = "../config/" + yaml_name
+        yaml_dict = self._get_yaml_dict(yaml_path)
+        if yaml_dict:
+            for label in yaml_dict:
+                train_dirs = yaml_dict[label]["directories"]                    # List of train dirs
+        else:
+            print("Warning: " + yaml_name + " not found.")
         # TODO: Import cell images from train.yaml
         # TODO: Compile training labels
         # TODO: Call classifier.train(self._train_cells) to train the CNN
-        pass
 
     def evaluate(self):
         # TODO: Load images of cells
@@ -45,23 +52,29 @@ class DiagnosisSystem(object):
         # Saves the cell into a directory with the same class name
         yaml_name = self._config["manually_classify"]                           # Get yaml file name
         yaml_path = "../config/" + yaml_name                                    # Get yaml file path
-        if os.path.isfile(yaml_path):                                           # Check yaml file path is True
-            with open(yaml_path) as yaml_file:                                  # Open yaml file
-                yaml_dict = yaml.load(yaml_file)                                # Get dict from yaml file
+        yaml_dict = self._get_yaml_dict(yaml_path)
+        if yaml_dict:
             train_dirs = yaml_dict["train"]["directories"]                      # List of training dirs
             test_dirs = yaml_dict["test"]["directories"]                        # List of test dirs
             train_files = yaml_dict["train"]["files"]                           # List of training images
             test_files = yaml_dict["test"]["files"]                             # List of test images
             image_height = yaml_dict["image_height"]                            # Height to crop cell images to
             image_width = yaml_dict["image_width"]                              # Width to crop cell images to
+            train_destination = yaml_dict["train"]["destination"]               # Get destination of training cells
+            test_destination = yaml_dict["test"]["destination"]                 # Get destination of test cells
+            labels = yaml_dict["labels"]                                        # Get names of classifications
             train_images = self._load_images(train_dirs, train_files)           # Load training image paths
             test_images = self._load_images(test_dirs, test_files)              # Load test image paths
-            self._detect_and_show(train_images, image_width, image_height)      # Detect cells and show user
-            self._detect_and_show(test_images, image_width, image_height)       # Detect cells and show user
+            self._detect_and_show(train_images, train_destination, labels,
+                                  image_width, image_height)                    # Detect cells and show user
+            self._detect_and_show(test_images, test_destination, labels,
+                                  image_width, image_height)                    # Detect cells and show user
         else:
             print("Warning: " + yaml_name + " not found.")
 
-    def _detect_and_show(self, images, image_width=0, image_height=0):
+    def _detect_and_show(self, images, destination, labels, image_width=0, image_height=0):
+        destination = "../" + destination                                       # Destination path starts one level up
+        self._make_cell_dirs(destination, labels)
         for image in images:                                                    # For each image
             cells = self._cell_detector.run(image)                              # Detect cells
             image.add_cells(cells)                                              # Add cells to image
@@ -71,12 +84,24 @@ class DiagnosisSystem(object):
                                                     fx=0.25, fy=0.25))          # Resize and show image
             cv2.waitKey(0)                                                      # Wait for keypress
             cv2.destroyAllWindows()                                             # Destroy window
-            for cell in image.get_cells():                                      # For every cell
+            for i, cell in enumerate(image.get_cells()):                        # For every cell
                 img = self._crop_to_cell(image.get_image(), cell,
                                          dx=image_width, dy=image_height)       # Crop to cell centre and a given size
                 cv2.imshow("Cell", img)                                         # Show cell to user
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                cv2.waitKey(50)                                                 # Give the image time to load
+                print("Classify the cell:")
+                for j, label in enumerate(labels):                              # For each option
+                    print("\t" + str(j + 1) + ". " + label[0] + " - " + label)  # Print option
+                selection = input("")                                           # Get user input
+                for label in labels:
+                    if selection == label[0] or selection == str(labels.index(label) + 1):
+                        image_name = destination + "/" + label + "/" \
+                                     + image.get_name() + "_" + str(i) + "." + image.get_type()
+                        print("Saving to " + image_name + ".")
+                        cv2.imwrite(image_name, img)                            # Save image
+                if selection == len(labels) + 1 or selection == "quit":
+                    break
+            cv2.destroyAllWindows()                                             # Destroy window
 
     def _load_images(self, directories, files):
         # Given a list of directories and a list of image file paths
@@ -89,6 +114,18 @@ class DiagnosisSystem(object):
         image_paths = set(image_paths)                                          # Remove any duplicates
         images = [Image(path) for path in image_paths]                          # Create an image object for each path
         return images                                                           # Return image paths
+
+    @staticmethod
+    def _make_cell_dirs(destination, labels):
+        dirs = destination.split("/")
+        path = ""
+        for directory in dirs:
+            if not os.path.isdir(path + directory):
+                os.mkdir(path + directory)
+            path += directory + "/"
+        for directory in labels:
+            if not os.path.isdir(path + directory):
+                os.mkdir(path + directory)
 
     @staticmethod
     def _crop_to_cell(image, cell, dx=0, dy=0):
@@ -123,8 +160,10 @@ class DiagnosisSystem(object):
         # Given a list of directories
         # Returns a list of the image paths within the directory
         image_paths = []                                                        # List to store image paths
-        if isinstance(directories, list):                                       # If a list is given
-            for directory in directories:                                       # For each directory
+        if not isinstance(directories, list):
+            directories = [directories]
+        for directory in directories:                                           # For each directory
+            if isinstance(directory, str):
                 directory = "../" + directory                                   # Directory will be one level above
                 if os.path.isdir(directory):                                    # If directory is True
                     for file in os.listdir(directory):                          # For each file in the dir
@@ -158,3 +197,11 @@ class DiagnosisSystem(object):
             print("Warning: no image name found in " + image_path + ".")
             sample_id = False
         return sample_id
+
+    @staticmethod
+    def _get_yaml_dict(path):
+        yaml_dict = {}
+        if os.path.isfile(path):
+            with open(path) as file:
+                yaml_dict = yaml.load(file)
+        return yaml_dict

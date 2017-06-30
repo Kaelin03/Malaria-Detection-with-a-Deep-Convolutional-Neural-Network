@@ -8,6 +8,13 @@ Keywords:
 * SVM = Support Vector Machine
 * MPL = Multi-Layer Perceptron
 
+30/06/2017
+----------
+
+> Classified ~ 2000 cells, 77 contaiend P. falciparum
+
+> Began writing code to import training images and organise for CNN
+
 29/06/2017
 ----------
 
@@ -16,7 +23,7 @@ Keywords:
 > * Write function to evaluate the CNN.
 > * Write function to test unclassified images.
 
-> Write code to aid manual classification of cells.
+> Wrote code to aid manual classification of cells.
 
 28/06/2017
 ----------

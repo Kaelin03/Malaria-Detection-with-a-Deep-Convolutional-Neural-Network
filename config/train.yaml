@@ -1,20 +1,12 @@
 # PATHS TO IMAGES OF CELLS FOR TRAINING THE CNN FOR EACH CLASS
 
 0:
-
-  images:
-    # Paths to individual images
-
   directories:
     # Paths to directories of images
-    - "train/cells/negatives"
+    - "train/cells/healthy/57546_01"
 
 1:
-
-  images:
-    # Paths to individual images
-
   directories:
     # Paths to directories of images
-    - "train/cells/positives"
+    - "train/cells/falciparum/57546_01"
 

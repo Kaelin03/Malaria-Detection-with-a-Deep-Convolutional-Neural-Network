@@ -1,10 +1,12 @@
 # PATHS TO SAMPLE IMAGES FOR TESTING
 
-images:
-  # Paths to individual images
-  # - "test/samples/57546/57546_23.jpg"
-  - "test/samples/57546/57546_24.jpg"
+0:
+  directories:
+    # Paths to directories of images
+    - "test/cells/healthy/57546_01"
 
-directories: 
-  # Paths to directories of images
-  # - "test/samples/57546"
+1:
+  directories:
+    # Paths to directories of images
+    - "test/cells/falciparum/57546_01"
+
