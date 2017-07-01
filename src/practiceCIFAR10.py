@@ -19,7 +19,7 @@ conv_depth_1 = 32       # Initial number of kernels in the convolutional layer
 conv_depth_2 = 64       # Number of kernels in the second convolutional layer
 drop_prob_1 = 0.25      # Probability of dropout after pooling
 drop_prob_2 = 0.5       # Probability of dropout in the fully-connected layer
-hidden_size = 512       # Number of nerons in the fully-connected layer
+hidden_size = 512       # Number of neurons in the fully-connected layer
 
 """
 1. Loading and pre-processing the CIFAR-10 data set

@@ -1,0 +1,116 @@
+# PARAMETERS FOR MALARIA DIAGNOSIS SYSTEM
+
+cell_detector:
+  # Parameters for cell detector
+  kernel_size:
+    # Kernel size for applying Gaussian blur
+    5
+  tolerance:
+    # Tolerance in micrometers of red blood cell radius
+    0.5
+  radius:
+    # Radius of a red blood cell in micrometers
+    3.5
+  minimum_distance:
+    # Minimum permissible distance between red blood cell centres
+    # Will be set automatically if zero. 
+    0
+  pixels_per_micrometer:
+    # The number of pixels for each micrometer of image
+    10
+  area_threshold:
+    # Percentage of the circle that should contant a cell
+    65
+
+classifier:
+  # Parameters for classifier
+  batch_size:     
+    # Number of training examples to consider in each iteration
+    32
+  num_epochs:     
+    # Number of times to iterate over tge entire training set
+    50
+  kernel_size:    
+    # Kernel size to be used throughout
+    3           
+  hidden_size:    
+    # Number of nerons in the fully-connected layer
+    512
+  pool_size:     
+     # Pooling size to be used throughout
+    2    
+  image_height:
+    # Height of the images 
+    80
+  image_width:
+    # Width of the images
+    80
+  image_depth:
+    # The number of colour channels
+    3       
+  conv_depth:
+    # Number of filters in the convolutional layer (list)
+    - 32          # Initial number of kernels in the convolutional layer
+    - 64          # Number of kernels in the second convolutional layer
+  drop_prob:
+    # Probability of a node droping out when training
+    - 0.25        # Probability of dropout after pooling
+    - 0.5         # Probability of dropout in the fully-connected layer
+
+manual_classifier:
+  image_height:
+    # Height to which cells will be cropped
+    80
+  image_width:
+    # Width to which cells will be cropped
+    80
+  labels: 
+    - falciparum
+    - healthy
+    - not
+    - unused
+  train:
+    # Images to be classified for training
+    files:
+      # Paths to individual images
+      - "train/samples/57546/57546_02.jpg"
+    destination:
+      # Destination paths for classified images
+      "train/cells" 
+  test: 
+    files:
+      # Paths to be classified for evaluation
+      # - "test/samples/57546/57546_24.jpg"
+    destination: 
+      # Destination paths for classified images
+      "test/cells"
+train:
+  # Labels and images for training the CNN
+  healthy:
+    directories:
+      # Paths to directories of images
+      - "train/cells/healthy/57546_01"
+
+  falciparum:
+    directories:
+      # Paths to directories of images
+      - "train/cells/falciparum/57546_01"
+
+evaluate:
+  # Labels and images for evaluating the CNN
+  healthy:
+    directories:
+      # Paths to directories of images
+      - "test/cells/healthy/57546_01"
+
+  falciparum:
+    directories:
+      # Paths to directories of images
+      - "test/cells/falciparum/57546_01"
+
+diagnose:
+  # Paths to directory of images that require diagnosis
+  directories: 
+    - "test/samples/57546"
+
+

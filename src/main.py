@@ -5,13 +5,7 @@ from DiagnosisSystem import DiagnosisSystem
 
 
 def main(args):
-    system_config = {"cell_detector": args.cell_detector_config,
-                     "classifier": args.classifier_config,
-                     "manually_classify": args.manually_classify,
-                     "train": args.train,
-                     "evaluate": args.evaluate,
-                     "test": args.test}
-    ds = DiagnosisSystem(system_config)
+    ds = DiagnosisSystem(args.config)
     while True:
         option = input("""What would you like to do?
     1. manually classify
@@ -29,14 +23,11 @@ def main(args):
             ds.test()
         elif option == "quit" or option == "5":
             break
+        else:
+            print("Invalid selection.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manually-classify", dest="manually_classify", default="manually_classify.yaml")
-    parser.add_argument("--train", default="train.yaml")
-    parser.add_argument("--evaluate", default="evaluate.yaml")
-    parser.add_argument("--test", default="test.yaml")
-    parser.add_argument("--cell-detector-config", dest="cell_detector_config", default="cell_detector.yaml")
-    parser.add_argument("--classifier-config", dest="classifier_config", default="classifier.yaml")
+    parser.add_argument("--config", default="config.yaml")
     arguments = parser.parse_args()
     main(arguments)

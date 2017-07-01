@@ -8,6 +8,14 @@ Keywords:
 * SVM = Support Vector Machine
 * MPL = Multi-Layer Perceptron
 
+01/06/2017
+----------
+
+> Refactor DiagnosisSystem
+> * All configs are now handled directly by DiagnosisSystem
+
+> Combine config files into one
+
 30/06/2017
 ----------
 
