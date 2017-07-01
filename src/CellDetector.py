@@ -18,7 +18,6 @@ class CellDetector(object):
         else:
             self._min_dist = self._min_rad
 
-
     def run(self, image):
         cells = []
         print("Detecting cells in " + image.get_name() + "...")
@@ -26,7 +25,7 @@ class CellDetector(object):
         img = self._pre_process(img)                                            # Pre-process for Hough Circles
         circles = self._hough_circles(img)                                      # Detect circles
         for circle in circles:
-            coverage = self.get_coverage(img, circle)                           # Check coverage of each circle
+            coverage = self._get_coverage(img, circle)                          # Check coverage of each circle
             if coverage > self._area_threshold:                                 # If coverage is above the threshold
                 cells.append(Cell(circle[0:2], circle[2]))                      # Append a new cell object
         print(str(len(cells)) + " cells found.")
@@ -54,7 +53,7 @@ class CellDetector(object):
         return circles                                                              # Return list of circles
 
     @staticmethod
-    def get_coverage(img, circle):
+    def _get_coverage(img, circle):
         # Given an image and a circle
         # Returns the percentage of pixels in the circle that are black
         height, width = img.shape                                                   # Dimensions of image

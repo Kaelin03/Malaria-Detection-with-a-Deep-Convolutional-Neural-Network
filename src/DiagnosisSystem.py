@@ -19,20 +19,42 @@ class DiagnosisSystem(object):
         self._evaluate_config = yaml_dict["evaluate"]                               # Config for evaluating
         self._diagnose_config = yaml_dict["diagnose"]                               # Config for diagnosing
         self._cell_detector = CellDetector(yaml_dict["cell_detector"])              # Init cell detector
-        # self._classifier = Classifier(yaml_dict["classifier"])                    # Init classifier
+        self._classifier = Classifier(yaml_dict["classifier"])                      # Init classifier
 
     def manually_classify(self):
-        train_paths = self._check_images(self._manual_config["train"]["files"])     # Check all train_paths are valid
-        test_paths = self._check_images(self._manual_config["test"]["files"])       # Check all test_paths are valid
-        train_destination = self._manual_config["train"]["destination"]             # Destination of train cells
-        test_destination = self._manual_config["test"]["destination"]               # Destination of test cells
-        train_images = self._make_images(train_paths)                               # Convert paths into Images
-        test_images = self._make_images(test_paths)                                 # Convert paths into Images
-        self._detect_and_classify(train_images, train_destination)                  # Detect and classify train cells
-        self._detect_and_classify(test_images, test_destination)                    # Detect and classify test cells
+        train_paths = self._manual_config["train"]["files"]
+        test_paths = self._manual_config["test"]["files"]
+        if train_paths:                                                             # If train paths are given
+            train_paths = ["../" + path for path in train_paths]                    # Start up one level
+            train_paths = self._check_images(train_paths)                           # Check the paths are valid
+            train_images = self._make_images(train_paths)                           # Convert paths into Images
+            train_destination = self._manual_config["train"]["destination"]         # Destination of train cells
+            self._detect_and_classify(train_images, train_destination)              # Detect and classify train cells
+        if test_paths:                                                              # If test paths are given
+            test_paths = ["../" + path for path in test_paths]                      # Start up one level
+            test_paths = self._check_images(test_paths)                             # Check the paths are valid
+            test_images = self._make_images(test_paths)                             # Convert paths into Images
+            test_destination = self._manual_config["test"]["destination"]           # Destination of train cells
+            self._detect_and_classify(test_images, test_destination)                # Detect and classify train cells
 
     def train(self):
-        pass
+        images = []
+        labels = []
+        for label in self._train_config:                                            # For each image class
+            for directory in self._train_config[label]["directories"]:              # For each directory given
+                directory = "../" + directory                                       # Path will begin one level up
+                if os.path.isdir(directory):                                        # If the directory exists
+                    image_paths = os.listdir(directory)                             # Get the file names in the dir
+                    image_paths = [directory + "/" + path for path in image_paths]  # Get the full file path
+                    image_paths = self._check_images(image_paths)                   # Check the files are images
+                    for path in image_paths:
+                        images.append(cv2.imread(path))
+                        labels.append(label)
+                else:
+                    print("Warning: " + directory + " not found.")
+        for image in images:
+            print(image.shape)
+        # self._classifier.train(x, y)
 
     def evaluate(self):
         pass
@@ -80,7 +102,8 @@ class DiagnosisSystem(object):
                 os.mkdir(path)                                                      # Make it
         cv2.imwrite(path + "/" + image_name, image)                                 # Save image to path
 
-    def _get_classification(self, labels):
+    @staticmethod
+    def _get_classification(labels):
         # Displays possible labels
         # Returns the user's selection
         print("Classify the cell:")
@@ -111,16 +134,14 @@ class DiagnosisSystem(object):
     @staticmethod
     def _check_images(image_paths):
         # Given a list of file paths
-        # Removes any duplicates or non png/jpg files
+        # Removes any non png/jpg files
         # Returns the list of file paths
         images = []                                                                 # List to store image paths
-        if isinstance(image_paths, list):                                           # Check that a list has been given
-            for path in image_paths:                                                # For each image_path
-                path = "../" + path                                                 # The path will begin up one level
-                if os.path.isfile(path):                                            # Check the given path is a file
-                    ext = path.split(".")[-1]                                       # Get the file extension
-                    if ext == "jpg" or "png":                                       # If the image is a png or jpg
-                        images.append(path)                                         # Append image path to image_paths
+        for path in image_paths:                                                    # For each image_path
+            if os.path.isfile(path):                                                # Check the given path is a file
+                ext = path.split(".")[-1]                                           # Get the file extension
+                if ext == "jpg" or "png":                                           # If the image is a png or jpg
+                    images.append(path)                                             # Append image path to image_paths
         return images
 
     @staticmethod

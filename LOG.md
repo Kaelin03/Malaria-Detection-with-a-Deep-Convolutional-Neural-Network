@@ -14,7 +14,14 @@ Keywords:
 > Refactor DiagnosisSystem
 > * All configs are now handled directly by DiagnosisSystem
 
-> Combine config files into one
+> Classified ~ 2000 cells, 74 contained P. falciparum
+
+> Combined config files into one
+
+> Imported images into numpy array for training the CNN
+> * Some trainin images are less than 80x80 due to being on the edge of the main image
+> * Should they be ignored?
+> * Or padded with zeros?
 
 30/06/2017
 ----------

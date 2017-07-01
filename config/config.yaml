@@ -39,15 +39,6 @@ classifier:
   pool_size:     
      # Pooling size to be used throughout
     2    
-  image_height:
-    # Height of the images 
-    80
-  image_width:
-    # Width of the images
-    80
-  image_depth:
-    # The number of colour channels
-    3       
   conv_depth:
     # Number of filters in the convolutional layer (list)
     - 32          # Initial number of kernels in the convolutional layer
@@ -73,7 +64,9 @@ manual_classifier:
     # Images to be classified for training
     files:
       # Paths to individual images
-      - "train/samples/57546/57546_02.jpg"
+      # - "train/samples/57546/57546_01.jpg"
+      # - "train/samples/57546/57546_02.jpg"
+      - "train/samples/57546/57546_03.jpg"
     destination:
       # Destination paths for classified images
       "train/cells" 
@@ -81,6 +74,7 @@ manual_classifier:
     files:
       # Paths to be classified for evaluation
       # - "test/samples/57546/57546_24.jpg"
+      # - "test/samples/57546/57546_23.jpg"
     destination: 
       # Destination paths for classified images
       "test/cells"
