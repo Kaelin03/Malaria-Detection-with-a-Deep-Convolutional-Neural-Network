@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from keras.datasets import cifar10      # Subroutines for getting the CIFAR-10 data set
 from keras.models import Model          # Class for specifying and training a Neural Network
+from keras.models import load_model
 from keras.layers import Input
 from keras.layers import Convolution2D
 from keras.layers import MaxPooling2D
@@ -10,7 +10,6 @@ from keras.layers import Dropout
 from keras.layers import Flatten
 from keras.utils import np_utils        # Utilities for one-hot encoding of ground truth values
 import numpy as np
-import yaml
 import os
 
 
@@ -34,12 +33,31 @@ class Classifier(object):
         self._model.fit(x=x, y=y,
                         epochs=self._num_epochs,
                         verbose=1,
-                        validation_split=0.1)                                       # Train the CNN
+                        validation_split=0.1,
+                        shuffle=True)                                               # Train the CNN
+        while True:
+            option = input("Would you like to save the model? y/n\n")
+            if option == "y" or option == "n":
+                break
+        if option == "y":
+            self.save_model()
 
-    def save_model(self, model_name):
-        file_path = "../models/" + model_name + ".h5"
-        self._model.save(filepath=file_path)                                        # Save model to file_path
-        print("Model saved in models/" + model_name + ".")
+    def save_model(self):
+        if self._model is not None:
+            model_name = input("Please enter the model name:\n")
+            file_path = "../models/" + model_name + ".h5"
+            self._model.save(filepath=file_path)                                        # Save model to file_path
+            print("Model saved in models/" + model_name + ".")
+        else:
+            print("Warning: model not compiled yet.")
+
+    def load_model(self):
+        filename = input("Enter the model name:\n")
+        filename = "../models/" + filename
+        if os.path.isfile(filename):
+            self._model = load_model(filename)
+        else:
+            print("Warning: " + filename + " not found.")
 
     def evaluate(self, x, y):
         y = np_utils.to_categorical(y=y, num_classes=2)                             # One-hot encode the labels
@@ -87,7 +105,7 @@ class Classifier(object):
         drop_3 = Dropout(rate=self._drop_prob[1])(hidden)
         out = Dense(units=num_classes,
                     activation="softmax")(drop_3)
-        model = Model(inputs=inp, outputs=out)
-        model.compile(loss="categorical_crossentropy",
-                      optimizer="adam",
-                      metrics=["accuracy"])
+        self._model = Model(inputs=inp, outputs=out)
+        self._model.compile(loss="categorical_crossentropy",
+                            optimizer="adam",
+                            metrics=["accuracy"])

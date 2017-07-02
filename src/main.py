@@ -10,18 +10,24 @@ def main(args):
         option = input("""What would you like to do?
     1. manually classify
     2. train
-    3. evaluate
-    4. test
-    5. quit\n""")
+    3. save model
+    4. load model
+    5. evaluate
+    6. test
+    7. quit\n""")
         if option == "manually classify" or option == "1":
             ds.manually_classify()
         elif option == "train" or option == "2":
             ds.train()
-        elif option == "evaluate" or option == "3":
+        elif option == "save model" or option == "3":
+            ds.save_model()
+        elif option == "load model" or option == "4":
+            ds.load_model()
+        elif option == "evaluate" or option == "5":
             ds.evalute()
-        elif option == "test" or option == "4":
+        elif option == "test" or option == "6":
             ds.test()
-        elif option == "quit" or option == "5":
+        elif option == "quit" or option == "7":
             break
         else:
             print("Invalid selection.")

@@ -8,6 +8,13 @@ Keywords:
 * SVM = Support Vector Machine
 * MPL = Multi-Layer Perceptron
 
+02/06/2017
+----------
+
+> Successfully trained the CNN using images of RBCs - training accuracy ~ 0.55 (poor)
+
+> Classified ~ 8000 cells
+
 01/06/2017
 ----------
 

@@ -38,28 +38,52 @@ class DiagnosisSystem(object):
             self._detect_and_classify(test_images, test_destination)                # Detect and classify train cells
 
     def train(self):
-        images = []
-        labels = []
-        for label in self._train_config:                                            # For each image class
-            for directory in self._train_config[label]["directories"]:              # For each directory given
+        data = []
+        labels_key = []
+        shape = (self._train_config["image_width"],
+                 self._train_config["image_height"],
+                 self._train_config["image_depth"])                                 # Get image size
+        for i, label in enumerate(self._train_config["labels"]):                    # For each image class
+            labels_key.append(label)                                                # Index corresponds to label number
+            for directory in self._train_config["labels"][label]["directories"]:    # For each directory given
                 directory = "../" + directory                                       # Path will begin one level up
                 if os.path.isdir(directory):                                        # If the directory exists
                     image_paths = os.listdir(directory)                             # Get the file names in the dir
                     image_paths = [directory + "/" + path for path in image_paths]  # Get the full file path
                     image_paths = self._check_images(image_paths)                   # Check the files are images
                     for path in image_paths:
-                        images.append(cv2.imread(path))
-                        labels.append(label)
+                        data.append([cv2.imread(path), i])                          # Append image and label to data
                 else:
                     print("Warning: " + directory + " not found.")
-        for image in images:
-            print(image.shape)
-        # self._classifier.train(x, y)
+        if self._train_config["small_images"] == "ignore":
+            data = self._ignore_small(data, shape)                                  # Remove small images
+        elif self._train_config["small_images"] == "pad":
+            data = self._pad_with_255(data, shape)                                  # Pad small images with zeros
+        else:
+            print("No changes made to image shapes.")
+        y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
+        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
+        for i, item in enumerate(data):
+            x[i] = item[0]
+            y[i] = item[1]
+        cont = self._check_balance(y)
+        if cont:
+            self._classifier.train(x, y)
+
+    def load_model(self):
+        self._classifier.load_model()
+
+    def save_model(self):
+        self._classifier.save_model()
 
     def evaluate(self):
+        # TODO get x and y from test data
+        # self._classifier.evaluate(x, y)
         pass
 
     def diagnose(self):
+        # TODO get x from test samples
+        # y = self._classifier.test(x)
         pass
 
     def _detect_and_classify(self, images, destination):
@@ -79,15 +103,58 @@ class DiagnosisSystem(object):
                 cv2.imshow("Cell", img)                                             # Show the cell
                 cv2.waitKey(50)                                                     # Give it time to load
                 selection = self._get_classification(self._manual_config["labels"]) # Get user classification
+                saved = False
+                image_name = image.get_name() + "_" + str(i) + "." + image.get_type()       # Make image name
                 for label in labels:
                     if selection == label[0] or selection == str(labels.index(label) + 1):
-                        image_name = image.get_name() + "_" + str(i) + "." + image.get_type()
-                        image_dir = "../" + destination + "/" + label + "/" + image.get_name()
+                        image_dir = "../" + destination + "/" + label + "/" + image.get_name()      # Get directory
+                        self._save_image(img, image_name, image_dir)                                # Save image
                         print("Saving to " + image_dir + "/" + image_name)
-                        self._save_image(img, image_name, image_dir)                # Save image
+                        saved = True
                 if selection == "q" or selection == str(len(labels) + 1):
                     break                                                           # Move on to next image
+                elif not saved:                                                     # If not yet saved
+                    image_dir = "../" + destination + "/unused/" + image.get_name()
+                    self._save_image(img, image_name, image_dir)                    # Save to unused
+                    print("Saving to " + image_dir + "/" + image_name)
             cv2.destroyAllWindows()                                                 # Destroy image window
+
+    @staticmethod
+    def _check_balance(y):
+        classes = np.unique(y)                                                      # Find the number of classes
+        class_freq = []
+        cont = True
+        for label in classes:
+            class_freq.append((np.sum(y == label)))
+        if not all(class_freq[0] == item for item in class_freq):
+            print("Warning: unbalanced training data, " + str(class_freq) + ".")
+            while True:
+                cont = input("Continue training? y/n\n")
+                if cont == "y":
+                    break
+                elif cont == "n":
+                    cont = False
+                    break
+        return cont
+
+    @staticmethod
+    def _pad_with_255(data, shape):
+        padded_data = []
+        for item in data:
+            if item[0].shape != shape:
+                x, y, z = item[0].shape
+                dx = int((shape[0] - x) / 2)
+                dy = int((shape[1] - y) / 2)
+                tmp = np.zeros(shape)
+                tmp.fill(255)
+                tmp[dx:x+dx, dy:y+dy, 0:z] = item[0]
+                item[0] = tmp
+            padded_data.append(item)
+        return padded_data
+
+    @staticmethod
+    def _ignore_small(data, shape):
+        return [item for item in data if item[0].shape == shape]
 
     @staticmethod
     def _save_image(image, image_name, destination):
