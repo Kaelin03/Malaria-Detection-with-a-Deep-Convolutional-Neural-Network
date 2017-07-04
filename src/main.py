@@ -12,9 +12,10 @@ def main(args):
     2. train
     3. save model
     4. load model
-    5. evaluate
-    6. test
-    7. quit\n""")
+    5. plot model
+    6. evaluate
+    7. diagnose
+    8. quit\n""")
         if option == "manually classify" or option == "1":
             ds.manually_classify()
         elif option == "train" or option == "2":
@@ -23,11 +24,13 @@ def main(args):
             ds.save_model()
         elif option == "load model" or option == "4":
             ds.load_model()
-        elif option == "evaluate" or option == "5":
+        elif option == "plot model" or option == "5":
+            ds.plot_model()
+        elif option == "evaluate" or option == "6":
             ds.evalute()
-        elif option == "test" or option == "6":
-            ds.test()
-        elif option == "quit" or option == "7":
+        elif option == "diagnose" or option == "7":
+            ds.diagnose()
+        elif option == "quit" or option == "8":
             break
         else:
             print("Invalid selection.")

@@ -8,22 +8,42 @@ Keywords:
 * SVM = Support Vector Machine
 * MPL = Multi-Layer Perceptron
 
+04/06/2017
+----------
+
+> Collected images from sample 57549.
+
+> Saved model trained on CIFAR-10 (to test functionality).
+
+> Manually classified ~ 4000 cells.
+
+03/06/2017
+----------
+
+> Classified ~ 12000 cells, now have a total of ~ 900 P. falciparum. 
+
+> Wrote code to:
+> * Evaluate the model using test cells
+> * Save the model.
+> * Load a model.
+> * Plot a model.
+
 02/06/2017
 ----------
 
-> Successfully trained the CNN using images of RBCs - training accuracy ~ 0.55 (poor)
+> Successfully trained the CNN using images of RBCs - training accuracy ~ 0.55 (poor).
 
-> Classified ~ 8000 cells
+> Manually classified ~ 8000 cells.
 
 01/06/2017
 ----------
 
 > Refactor DiagnosisSystem
-> * All configs are now handled directly by DiagnosisSystem
+> * All configs are now handled directly by DiagnosisSystem.
 
-> Classified ~ 2000 cells, 74 contained P. falciparum
+> Classified ~ 2000 cells, 74 contained P. falciparum.
 
-> Combined config files into one
+> Combined config files into one.
 
 > Imported images into numpy array for training the CNN
 > * Some trainin images are less than 80x80 due to being on the edge of the main image
@@ -33,17 +53,28 @@ Keywords:
 30/06/2017
 ----------
 
-> Classified ~ 2000 cells, 77 contaiend P. falciparum
+> Classified ~ 2000 cells, 77 contaiend P. falciparum.
 
-> Began writing code to import training images and organise for CNN
+> Wrote code to import training images and organise for CNN.
 
 29/06/2017
 ----------
 
-> Implementing CNN for cell classification. 
-> * Write function to train the CNN.
-> * Write function to evaluate the CNN.
-> * Write function to test unclassified images.
+> Meeting with Guido:
+> Start thinking about what to present:
+> * Detector of multiple types of parasite.
+> * Comparison between methods: SVM v CNN or single phase CNN vs two-phase CNN.
+> * What sensitivity and specificity rates can be considered good?
+> * Outputs? total cell count; % infected; can I give WBC count? 
+> * Calculate 95 percentiles give CNN test accuracy?
+> * Include label for "not a cell".
+> * Alter class weights or copy cells to make up the difference. 
+
+
+> Implemented CNN for cell classification. 
+> * Wrote function to train the CNN.
+> * Wrote function to evaluate the CNN.
+> * Wrote function to test unclassified images.
 
 > Wrote code to aid manual classification of cells.
 

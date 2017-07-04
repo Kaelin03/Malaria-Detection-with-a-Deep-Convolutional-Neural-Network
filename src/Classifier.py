@@ -8,6 +8,7 @@ from keras.layers import MaxPooling2D
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Flatten
+from keras.utils import plot_model
 from keras.utils import np_utils        # Utilities for one-hot encoding of ground truth values
 import numpy as np
 import os
@@ -30,6 +31,7 @@ class Classifier(object):
         image_size = x.shape[1:4]                                                   # Find the image size
         self._compile_model(image_size=image_size, num_classes=num_classes)         # Build the CNN model
         y = np_utils.to_categorical(y=y, num_classes=num_classes)                   # One-hot encode the labels
+        x = self._normalise(x)                                                      # Normalise images
         self._model.fit(x=x, y=y,
                         epochs=self._num_epochs,
                         verbose=1,
@@ -41,6 +43,12 @@ class Classifier(object):
                 break
         if option == "y":
             self.save_model()
+
+    @staticmethod
+    def _normalise(x):
+        x = x.astype("float32")                                                     # Convert to float32
+        x /= 255                                                                    # Normalise
+        return x
 
     def save_model(self):
         if self._model is not None:
@@ -59,8 +67,20 @@ class Classifier(object):
         else:
             print("Warning: " + filename + " not found.")
 
+    def plot_model(self):
+        filename = input("Enter the model name:")
+        filename = "../models/" + filename
+        if self._model is not None:
+            plot_model(self._model,
+                       to_file=filename,
+                       show_shapes=True,
+                       show_layer_names=False)
+        else:
+            print("Warning: model not compiled yet.")
+
     def evaluate(self, x, y):
         y = np_utils.to_categorical(y=y, num_classes=2)                             # One-hot encode the labels
+        x, y, = self._normalise(x, y)
         scores = self._model.evaluate(x=x,
                                       y=y,
                                       verbose=1)                                    # Evaluate using test data

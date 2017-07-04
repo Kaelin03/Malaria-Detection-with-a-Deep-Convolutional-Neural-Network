@@ -65,28 +65,35 @@ manual_classifier:
             # - "train/samples/57546/57546_03.jpg"
             # - "train/samples/57546/57546_04.jpg"
             # - "train/samples/57546/57546_05.jpg"
-            - "train/samples/57546/57546_06.jpg"
+            # - "train/samples/57546/57546_06.jpg"
             # - "train/samples/57546/57546_07.jpg"
+            # - "train/samples/57546/57546_08.jpg"
+            # - "train/samples/57546/57546_09.jpg"
+            # - "train/samples/57546/57546_10.jpg"
+            # - "train/samples/57546/57546_11.jpg"
+            # - "train/samples/57546/57546_12.jpg"
+            - "train/samples/57546/57546_13.jpg"
+            - "train/samples/57546/57546_14.jpg"
         destination:
+
             # Destination paths for classified images
             "train/cells" 
     test: 
         files:
             # Paths to be classified for evaluation
-            # - "test/samples/57546/57546_24.jpg"
-            # - "test/samples/57546/57546_23.jpg"
+            - "test/samples/57546/57546_24.jpg"
+            - "test/samples/57546/57546_23.jpg"
         destination: 
             # Destination paths for classified images
             "test/cells"
 train:
     # Labels and images for training the CNN
     labels:
-        healthy:
+        0:
             directories:
                 # Paths to directories of images
                 - "train/cells/healthy/57546"
-
-        falciparum:
+        1:
             directories:
                 # Paths to directories of images
                 - "train/cells/falciparum/57546_01"
@@ -94,6 +101,34 @@ train:
                 - "train/cells/falciparum/57546_03"
                 - "train/cells/falciparum/57546_04"
                 - "train/cells/falciparum/57546_05"
+                - "train/cells/falciparum/57546_06"
+                - "train/cells/falciparum/57546_07"
+                - "train/cells/falciparum/57546_08"
+                - "train/cells/falciparum/57546_09"
+                - "train/cells/falciparum/57546_10"
+                - "train/cells/falciparum/57546_11"
+                - "train/cells/falciparum/57546_12"
+                - "train/cells/falciparum/57546_13"
+    small_images:
+        # "pad"
+        "ignore"
+    image_height:
+        80
+    image_width:
+        80
+    image_depth:
+        3
+evaluate:
+    # Labels must be ints starting from 0 (for one-hot encoding)
+    labels:
+        0:
+            directories:
+            # Paths to directories of images
+            - "test/cells/healthy/57546_01"
+        1:
+            directories:
+            # Paths to directories of images
+            - "test/cells/falciparum/57546_01"
     small_images:
         # "ignore"
         "pad"
@@ -103,19 +138,10 @@ train:
         80
     image_depth:
         3
-evaluate:
-    # Labels and images for evaluating the CNN
-    healthy:
-        directories:
-        # Paths to directories of images
-        - "test/cells/healthy/57546_01"
-    falciparum:
-        directories:
-        # Paths to directories of images
-        - "test/cells/falciparum/57546_01"
 diagnose:
     # Paths to directory of images that require diagnosis
     directories: 
         - "test/samples/57546"
+
 
 

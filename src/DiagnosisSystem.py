@@ -43,32 +43,25 @@ class DiagnosisSystem(object):
         shape = (self._train_config["image_width"],
                  self._train_config["image_height"],
                  self._train_config["image_depth"])                                 # Get image size
-        for i, label in enumerate(self._train_config["labels"]):                    # For each image class
+        for label in self._train_config["labels"]:                                  # For each image class
             labels_key.append(label)                                                # Index corresponds to label number
             for directory in self._train_config["labels"][label]["directories"]:    # For each directory given
                 directory = "../" + directory                                       # Path will begin one level up
-                if os.path.isdir(directory):                                        # If the directory exists
-                    image_paths = os.listdir(directory)                             # Get the file names in the dir
-                    image_paths = [directory + "/" + path for path in image_paths]  # Get the full file path
-                    image_paths = self._check_images(image_paths)                   # Check the files are images
-                    for path in image_paths:
-                        data.append([cv2.imread(path), i])                          # Append image and label to data
-                else:
-                    print("Warning: " + directory + " not found.")
+                data += self._get_images(directory, label)                          # Get images from directory
         if self._train_config["small_images"] == "ignore":
             data = self._ignore_small(data, shape)                                  # Remove small images
         elif self._train_config["small_images"] == "pad":
-            data = self._pad_with_255(data, shape)                                  # Pad small images with zeros
+            data = self._pad_with(data, shape, 255)                                 # Pad small images with zeros
         else:
             print("No changes made to image shapes.")
         y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
         x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
-        for i, item in enumerate(data):
-            x[i] = item[0]
-            y[i] = item[1]
-        cont = self._check_balance(y)
+        for i, item in enumerate(data):                                             # Put data into numpy arrays
+            x[i] = item[0]                                                          # x contains images
+            y[i] = item[1]                                                          # y contains labels
+        cont = self._check_balance(y)                                               # Check that data is balanced
         if cont:
-            self._classifier.train(x, y)
+            self._classifier.train(x, y)                                            # Train the CNNs
 
     def load_model(self):
         self._classifier.load_model()
@@ -76,15 +69,49 @@ class DiagnosisSystem(object):
     def save_model(self):
         self._classifier.save_model()
 
+    def plot_model(self):
+        self._classifier.plot_model()
+
     def evaluate(self):
-        # TODO get x and y from test data
-        # self._classifier.evaluate(x, y)
-        pass
+        data = []
+        labels_key = []
+        shape = (self._evaluate_config["image_width"],
+                 self._evaluate_config["image_height"],
+                 self._evaluate_config["image_depth"])                              # Get image size
+        for label in self._evaluate_config["labels"]:                               # For each image class
+            labels_key.append(label)                                                # Index corresponds to label number
+            for directory in self._evaluate_config["labels"][label]["directories"]:     # For each directory given
+                directory = "../" + directory                                       # Path will begin one level up
+                data += self._get_images(directory, label)                          # Get images from directory
+        if self._evaluate_config["small_images"] == "ignore":
+            data = self._ignore_small(data, shape)                                  # Remove small images
+        elif self._evaluate_config["small_images"] == "pad":
+            data = self._pad_with(data, shape, 255)                                 # Pad small images with zeros
+        else:
+            print("No changes made to image shapes.")
+        y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
+        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
+        for i, item in enumerate(data):                                             # Put data into numpy arrays
+            x[i] = item[0]                                                          # x contains images
+            y[i] = item[1]                                                          # y contains labels
+        self._classifier.evaluate(x, y)
 
     def diagnose(self):
         # TODO get x from test samples
         # y = self._classifier.test(x)
         pass
+
+    def _get_images(self, directory, label):
+        data = []
+        if os.path.isdir(directory):                                                # If the directory exists
+            image_paths = os.listdir(directory)                                     # Get the file names in the dir
+            image_paths = [directory + "/" + path for path in image_paths]          # Get the full file path
+            image_paths = self._check_images(image_paths)                           # Check the files are images
+            for path in image_paths:
+                data.append([cv2.imread(path), label])                              # Append image and label to data
+        else:
+            print("Warning: " + directory + " not found.")
+        return data
 
     def _detect_and_classify(self, images, destination):
         dx = self._manual_config["image_width"]                                     # Get height for cropping image
@@ -138,7 +165,7 @@ class DiagnosisSystem(object):
         return cont
 
     @staticmethod
-    def _pad_with_255(data, shape):
+    def _pad_with(data, shape, value=0):
         padded_data = []
         for item in data:
             if item[0].shape != shape:
@@ -146,7 +173,7 @@ class DiagnosisSystem(object):
                 dx = int((shape[0] - x) / 2)
                 dy = int((shape[1] - y) / 2)
                 tmp = np.zeros(shape)
-                tmp.fill(255)
+                tmp.fill(value)
                 tmp[dx:x+dx, dy:y+dy, 0:z] = item[0]
                 item[0] = tmp
             padded_data.append(item)

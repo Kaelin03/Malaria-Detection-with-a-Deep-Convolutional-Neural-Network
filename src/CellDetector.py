@@ -11,12 +11,15 @@ class CellDetector(object):
     def __init__(self, config):
         self._kernel_size = tuple([config["kernel_size"]] * 2)
         self._area_threshold = config["area_threshold"]
-        self._min_rad = int((config["radius"] - config["tolerance"]) * config["pixels_per_micrometer"])
-        self._max_rad = int((config["radius"] + config["tolerance"]) * config["pixels_per_micrometer"])
-        if config["minimum_distance"]:
-            self._min_dist = int(config["minimum_distance"])
-        else:
-            self._min_dist = self._min_rad
+        try:
+            self._min_rad = int((config["radius"] - config["tolerance"]) * config["pixels_per_micrometer"])
+            self._max_rad = int((config["radius"] + config["tolerance"]) * config["pixels_per_micrometer"])
+            if config["minimum_distance"]:
+                self._min_dist = int(config["minimum_distance"])
+            else:
+                self._min_dist = self._min_rad
+        except TypeError:
+            print("Warning: Cell Detector not configured.")
 
     def run(self, image):
         cells = []
