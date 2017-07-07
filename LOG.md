@@ -22,6 +22,7 @@ Keywords:
 > With new learn-rate, after 10 epochs:
 > * Train acc = 63% 
 > * Test acc = 66%
+> * (Test acc is higher, probably becuase the test data set is currently small)
 
 06/06/2017
 ----------
