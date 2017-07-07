@@ -8,19 +8,21 @@ cell_detector:
     pixels_per_micrometer:
     area_threshold:
 classifier:
+    augment:
+        True
     # Parameters for classifier
     batch_size:     
         # Number of training examples to consider in each iteration
         32
     num_epochs:     
         # Number of times to iterate over tge entire training set
-        1
+        10
     kernel_size:    
         # Kernel size to be used throughout
         - 3
         - 3
-        - 3
-        - 3          
+        - 6
+        - 6          
     hidden_size:    
         # Number of nerons in the fully-connected layer
         - 512
@@ -55,48 +57,48 @@ train:
         0:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/0"
+                - "train/mnist/0"
         1:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/1"
+                - "train/mnist/1"
         2:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/2"
+                - "train/mnist/2"
         3:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/3"
+                - "train/mnist/3"
         4:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/4"
+                - "train/mnist/4"
         5:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/5"
+                - "train/mnist/5"
         6:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/6"
+                - "train/mnist/6"
         7:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/7"
+                - "train/mnist/7"
         8:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/8"
+                - "train/mnist/8"
         9:
             directories:
                 # Paths to directories of images
-                - "train/cifar10/9"
+                - "train/mnist/9"
     small_images:
     image_height:
-        32
+        28
     image_width:
-        32
+        28
     image_depth:
         3
     resize:
@@ -106,48 +108,49 @@ evaluate:
         0:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/0"
+                - "test/mnist/0"
         1:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/1"
+                - "test/mnist/1"
         2:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/2"
+                - "test/mnist/2"
         3:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/3"
+                - "test/mnist/3"
         4:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/4"
+                - "test/mnist/4"
         5:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/5"
+                - "test/mnist/5"
         6:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/6"
+                - "test/mnist/6"
         7:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/7"
+                - "test/mnist/7"
         8:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/8"
+                - "test/mnist/8"
         9:
             directories:
                 # Paths to directories of images
-                - "test/cifar10/9"
+                - "test/mnist/9"
+    resize:
     small_images:
     image_height:
-        32
+        28
     image_width:
-        32
+        28
     image_depth:
         3
 diagnose:

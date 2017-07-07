@@ -7,6 +7,41 @@ Keywords:
 * RBC = Red Blood Cell
 * SVM = Support Vector Machine
 * MPL = Multi-Layer Perceptron
+* ReLU = Rectified Linear Unit
+* ELU = Exponential Linear Unit
+* VGG = Visual Geometry Group
+
+07/06/2017
+----------
+
+> Implemented code to augment training data in real-time.
+> * Benefits of this to be tested.
+
+> Reduced learn-rate to 0.00001
+
+> With new learn-rate, after 10 epochs:
+> * Train acc = 63% 
+> * Test acc = 66%
+
+06/06/2017
+----------
+
+> Re-wrote model as sequential to speed up development.
+
+> Read literature on topics of:
+> * ELU vs ReLU vs Leaky-ReLU
+> * VGG architecture 
+
+05/06/2017
+----------
+
+> Re-wrote model as sequential to speed up development.
+
+> Read literature on topics of:
+> * CNN design patterns
+> * Docker
+
+> Tried to train CNN with a balanced set of 2000 training cells, failed. 
 
 04/06/2017
 ----------
@@ -20,6 +55,9 @@ Keywords:
 03/06/2017
 ----------
 
+> Emailed Dr. Phil Culverhouse.
+> * Conisder elastically warping images to give more train/test data.
+
 > Classified ~ 12000 cells, now have a total of ~ 900 P. falciparum. 
 
 > Wrote code to:
@@ -31,7 +69,7 @@ Keywords:
 02/06/2017
 ----------
 
-> Successfully trained the CNN using images of RBCs - training accuracy ~ 0.55 (poor).
+> Successfully trained the CNN using images of RBCs.
 
 > Manually classified ~ 8000 cells.
 

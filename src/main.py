@@ -27,7 +27,7 @@ def main(args):
         elif option == "plot model" or option == "5":
             ds.plot_model()
         elif option == "evaluate" or option == "6":
-            ds.evalute()
+            ds.evaluate()
         elif option == "diagnose" or option == "7":
             ds.diagnose()
         elif option == "quit" or option == "8":

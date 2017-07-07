@@ -3,6 +3,7 @@
 import os
 import cv2
 import yaml
+import random
 import numpy as np
 
 from Image import Image
@@ -13,10 +14,10 @@ from Classifier import Classifier
 class DiagnosisSystem(object):
 
     def __init__(self, yaml_path):
-        yaml_dict = self._get_yaml_dict("../config/" + yaml_path)                   # Get dict from given yaml file name
+        self._yaml_path = "../config/" + yaml_path
+        yaml_dict = self._get_yaml_dict(self._yaml_path)                            # Get dict from given yaml file name
         self._manual_config = yaml_dict["manual_classifier"]                        # Config for manual classifier
         self._train_config = yaml_dict["train"]                                     # Config for training
-        self._evaluate_config = yaml_dict["evaluate"]                               # Config for evaluating
         self._diagnose_config = yaml_dict["diagnose"]                               # Config for diagnosing
         self._cell_detector = CellDetector(yaml_dict["cell_detector"])              # Init cell detector
         self._classifier = Classifier(yaml_dict["classifier"])                      # Init classifier
@@ -39,26 +40,25 @@ class DiagnosisSystem(object):
 
     def train(self):
         data = []
-        labels_key = []
         shape = (self._train_config["image_width"],
                  self._train_config["image_height"],
                  self._train_config["image_depth"])                                 # Get image size
         for label in self._train_config["labels"]:                                  # For each image class
-            labels_key.append(label)                                                # Index corresponds to label number
-            for directory in self._train_config["labels"][label]["directories"]:    # For each directory given
-                directory = "../" + directory                                       # Path will begin one level up
-                data += self._get_images(directory, label)                          # Get images from directory
+            print(label)
+            directories = self._train_config["labels"][label]["directories"]
+            if directories is not None:
+                for directory in directories:                                       # For each directory given
+                    data += self._get_images("../" + directory, label)              # Get images from directory
         if self._train_config["small_images"] == "ignore":
             data = self._ignore_small(data, shape)                                  # Remove small images
         elif self._train_config["small_images"] == "pad":
             data = self._pad_with(data, shape, 255)                                 # Pad small images with zeros
         else:
             print("No changes made to image shapes.")
-        y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
-        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
-        for i, item in enumerate(data):                                             # Put data into numpy arrays
-            x[i] = item[0]                                                          # x contains images
-            y[i] = item[1]                                                          # y contains labels
+        random.shuffle(data)                                                        # Shuffle the data
+        x, y = self._to_arrays(data, shape)                                         # Put the data into numpy arrays
+        x = self._resize(x, self._train_config["resize"])                           # Resize images
+        x = self._normalise(x)
         cont = self._check_balance(y)                                               # Check that data is balanced
         if cont:
             self._classifier.train(x, y)                                            # Train the CNNs
@@ -70,31 +70,33 @@ class DiagnosisSystem(object):
         self._classifier.save_model()
 
     def plot_model(self):
+        image_size = input("Enter the image dimensions:\n")
+        image_size = tuple(map(int, image_size.split(",")))
+        self._classifier.compile_model(image_size=image_size, num_classes=2)
         self._classifier.plot_model()
 
     def evaluate(self):
-        data = []
-        labels_key = []
-        shape = (self._evaluate_config["image_width"],
-                 self._evaluate_config["image_height"],
-                 self._evaluate_config["image_depth"])                              # Get image size
-        for label in self._evaluate_config["labels"]:                               # For each image class
-            labels_key.append(label)                                                # Index corresponds to label number
-            for directory in self._evaluate_config["labels"][label]["directories"]:     # For each directory given
-                directory = "../" + directory                                       # Path will begin one level up
-                data += self._get_images(directory, label)                          # Get images from directory
-        if self._evaluate_config["small_images"] == "ignore":
-            data = self._ignore_small(data, shape)                                  # Remove small images
-        elif self._evaluate_config["small_images"] == "pad":
-            data = self._pad_with(data, shape, 255)                                 # Pad small images with zeros
-        else:
-            print("No changes made to image shapes.")
-        y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
-        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
-        for i, item in enumerate(data):                                             # Put data into numpy arrays
-            x[i] = item[0]                                                          # x contains images
-            y[i] = item[1]                                                          # y contains labels
-        self._classifier.evaluate(x, y)
+        evaluate_config = self._get_yaml_dict(self._yaml_path)["evaluate"]
+        shape = (evaluate_config["image_width"],
+                 evaluate_config["image_height"],
+                 evaluate_config["image_depth"])                                    # Get image size
+        num_classes = len(evaluate_config["labels"])
+        for label in evaluate_config["labels"]:                                     # For each image class
+            directories = evaluate_config["labels"][label]["directories"]
+            if directories is not None:
+                data = []
+                for directory in directories:
+                    data += self._get_images("../" + directory, label)
+                if evaluate_config["small_images"] == "ignore":
+                    data = self._ignore_small(data, shape)                              # Remove small images
+                elif evaluate_config["small_images"] == "pad":
+                    data = self._pad_with(data, shape, 255)                             # Pad small images with zeros
+                else:
+                    print("No changes made to image shapes.")
+                x, y = self._to_arrays(data, shape)
+                x = self._resize(x, self._train_config["resize"])                       # Resize images
+                x = self._normalise(x)
+                self._classifier.evaluate(x, y, num_classes=num_classes)
 
     def diagnose(self):
         # TODO get x from test samples
@@ -147,6 +149,30 @@ class DiagnosisSystem(object):
             cv2.destroyAllWindows()                                                 # Destroy image window
 
     @staticmethod
+    def _to_arrays(data, shape):
+        y = np.empty((len(data), 1), dtype=np.uint8)  # Init labels array
+        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)  # Init data array
+        for i, item in enumerate(data):                                             # Put data into numpy arrays
+            x[i] = item[0]                                                          # x contains images
+            y[i] = item[1]                                                          # y contains labels
+        return x, y
+
+    @staticmethod
+    def _resize(x, size):
+        if size is not None:
+            x_resized = np.empty((x.shape[0], size, size, x.shape[3]), dtype=np.uint8)
+            for i in range(x.shape[0]):
+                x_resized[i] = cv2.resize(x[i], (size, size))
+            x = x_resized
+        return x
+
+    @staticmethod
+    def _normalise(x):
+        x = x.astype("float32")                                                     # Convert to float32
+        x /= 255                                                                    # Normalise
+        return x
+
+    @staticmethod
     def _check_balance(y):
         classes = np.unique(y)                                                      # Find the number of classes
         class_freq = []
@@ -154,9 +180,9 @@ class DiagnosisSystem(object):
         for label in classes:
             class_freq.append((np.sum(y == label)))
         if not all(class_freq[0] == item for item in class_freq):
-            print("Warning: unbalanced training data, " + str(class_freq) + ".")
+            print("Warning: unbalanced data, " + str(class_freq) + ".")
             while True:
-                cont = input("Continue training? y/n\n")
+                cont = input("Continue ? y/n\n")
                 if cont == "y":
                     break
                 elif cont == "n":
