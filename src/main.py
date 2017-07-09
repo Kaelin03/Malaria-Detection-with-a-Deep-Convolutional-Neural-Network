@@ -10,27 +10,36 @@ def main(args):
         option = input("""What would you like to do?
     1. manually classify
     2. train
-    3. save model
-    4. load model
-    5. plot model
-    6. evaluate
-    7. diagnose
-    8. quit\n""")
+    3. evaluate
+    4. save model
+    5. load model
+    6. plot model
+    7. save history
+    8. plot history
+    9. - plot filters
+    10. - diagnose
+    11. quit\n""")
         if option == "manually classify" or option == "1":
             ds.manually_classify()
         elif option == "train" or option == "2":
             ds.train()
-        elif option == "save model" or option == "3":
-            ds.save_model()
-        elif option == "load model" or option == "4":
-            ds.load_model()
-        elif option == "plot model" or option == "5":
-            ds.plot_model()
-        elif option == "evaluate" or option == "6":
+        elif option == "evaluate" or option == "3":
             ds.evaluate()
-        elif option == "diagnose" or option == "7":
+        elif option == "save model" or option == "4":
+            ds.save_model()
+        elif option == "load model" or option == "5":
+            ds.load_model()
+        elif option == "plot model" or option == "6":
+            ds.plot_model()
+        elif option == "save history" or option == "7":
+            ds.save_history()
+        elif option == "plot history" or option == "8":
+            ds.plot_history()
+        elif option == "plot filters" or option == "9":
+            ds.plot_filters()
+        elif option == "diagnose" or option == "10":
             ds.diagnose()
-        elif option == "quit" or option == "8":
+        elif option == "quit" or option == "11":
             break
         else:
             print("Invalid selection.")

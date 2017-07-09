@@ -2,6 +2,8 @@
 .idea
 models
 results
+logs
+figures
 test
 train
 
