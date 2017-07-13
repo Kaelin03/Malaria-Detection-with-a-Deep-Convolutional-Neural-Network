@@ -127,6 +127,8 @@ class ManualClassifier(object):
                 ext = path.split(".")[-1]                                           # Get the file extension
                 if ext == "jpg" or "png":                                           # If the image is a png or jpg
                     images.append(path)                                             # Append image path to image_paths
+            else:
+                print("Warning: " + path + " not found.")
         return images
 
     @staticmethod

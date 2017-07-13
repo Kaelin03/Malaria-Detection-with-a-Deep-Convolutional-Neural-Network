@@ -6,6 +6,9 @@ import cv2
 class Image(object):
 
     def __init__(self, path):
+        """
+        :param path:
+        """
         self._path = path
         self._name = path.split("/")[-1].split(".")[-2]     # Extract the name of the image from that path
         self._type = path.split("/")[-1].split(".")[-1]     # Extract the image type from the path
@@ -13,38 +16,75 @@ class Image(object):
         self._cells = []
 
     def add_cell(self, cell):
-        # Add a new cell object to cells
+        """
+        :param cell:
+        :return:
+        """
         self._cells.append(cell)
 
+    def total_cells(self, status=None):
+        """
+        :return:
+        """
+        if status is None:
+            return len(self._cells)
+        else:
+            n = 0
+            for cell in self._cells:
+                if cell.get_status() == status:
+                    n += 1
+            return n
+
     def add_cells(self, cells):
-        # Add a list of new cell objects to cells
+        """
+        :param cells:
+        :return:
+        """
         for cell in cells:
             self.add_cell(cell)
 
     def draw_cells(self, img, col=(0, 255, 0), width=2):
+        """
+        :param img:
+        :param col:
+        :param width:
+        :return:
+        """
         for cell in self._cells:
             cell.draw(img, col, width)
 
     def get_cells(self):
-        # Returns list of cell objects associated with the image
+        """
+        :return:
+        """
         return self._cells
 
     def get_id(self):
-        # Returns the name of the sample
+        """
+        :return:
+        """
         return self._id
 
     def get_path(self):
-        # Returns the path to the image
+        """
+        :return:
+        """
         return self._path
 
     def get_name(self):
-        # Returns the name of the image
+        """
+        :return:
+        """
         return self._name
 
     def get_type(self):
-        # Returns the image type
+        """
+        :return:
+        """
         return self._type
 
     def get_image(self):
-        # Returns the image as a BGR numpy array
+        """
+        :return:
+        """
         return cv2.imread(self._path)

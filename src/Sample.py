@@ -6,18 +6,33 @@ from Image import Image
 class Sample(object):
 
     def __init__(self, my_id):
+        """
+        :param my_id:
+        """
         self._id = my_id
         self._images = []
 
     def add_image(self, image_path):
-        # Give an image path
-        # Initialises new Image object and appends to list of images
+        """
+        :param image_path:
+        :return:
+        """
         self._images.append(Image(image_path))
 
+    def total_cells(self, status=None):
+        """
+        :return:
+        """
+        return sum([image.total_cells(status) for image in self._images])
+
     def get_images(self):
-        # Returns the list of images
+        """
+        :return: images
+        """
         return self._images
 
     def get_id(self):
-        # Returns the name of the sample
+        """
+        :return: _id
+        """
         return self._id

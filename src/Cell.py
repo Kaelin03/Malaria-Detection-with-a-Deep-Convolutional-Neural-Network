@@ -5,12 +5,13 @@ import cv2
 
 class Cell(object):
 
-    def __init__(self, position, radius):
+    def __init__(self, position, radius, path):
+        self._path = path
         self._position = tuple(map(int, position))
         self._radius = int(radius)
         self._status = None
         
-    def get_image(self, image, dx=0, dy=0):
+    def get_image(self, dx=0, dy=0):
         """
         Crop the image with the cell in the centre
         If dx and dy are not give, the crop will be to the cell radius
@@ -19,6 +20,7 @@ class Cell(object):
         :param dy: height to crop the image to
         :return: cropped image
         """
+        image = cv2.imread(self._path)
         if dx <= 0:                                                                 # If dx <= 0
             dx = self._radius * 2                                                   # Crop to cell radius
         if dy <= 0:                                                                 # If dy <= 0
@@ -30,13 +32,18 @@ class Cell(object):
         y2 = int(min(self._position[1] + dy / 2, height))
         return image[y1:y2, x1:x2, :]
 
-    def draw(self, image, col=(0, 255, 0), width=2):
+    def draw(self, image, col=None, width=2):
         """
         Draws a circle around the cell on a given image
         :param image: image on which to draw
         :param col: colour of the line
         :param width: width of the line
         """
+        if col is None:
+            if self._status == 0:
+                col = (0, 255, 0)
+            elif self._status == 1:
+                col = (0, 0, 255)
         cv2.circle(image, self._position, self._radius, col, width)
 
     def get_position(self):
@@ -56,3 +63,10 @@ class Cell(object):
         :return: status of the cell
         """
         return self._status
+
+    def set_status(self, status):
+        """
+        :param status:
+        :return:
+        """
+        self._status = status

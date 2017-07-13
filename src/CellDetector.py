@@ -47,20 +47,19 @@ class CellDetector(object):
         :return: list of cell objects
         """
         self.update_config()
-        try:
-            cells = []                                                              # Initialise list of cell objects
-            print("Detecting cells in " + image.get_name() + "...")                 # Feedback for user
-            img = image.get_image()                                                 # Get the image
-            img = self._pre_process(img)                                            # Pre-process for Hough Circles
-            circles = self._hough_circles(img)                                      # Detect circles
-            for circle in circles:                                                  # For every circle
-                coverage = self._get_coverage(img, circle)                          # Check coverage of each circle
-                if coverage > self._area_threshold:                                 # If coverage is above the threshold
-                    cells.append(Cell(circle[0:2], circle[2]))                      # Append a new cell object
-            print(str(len(cells)) + " cells found.")
-        except TypeError:
-            print("Warning: cell detection failed.")
-            print("Ensure all configuration values are correct.")
+        cells = []                                                              # Initialise list of cell objects
+        print("Detecting cells in " + image.get_name() + "...")                 # Feedback for user
+        img = image.get_image()                                                 # Get the image
+        img = self._pre_process(img)                                            # Pre-process for Hough Circles
+        circles = self._hough_circles(img)                                      # Detect circles
+        for circle in circles:                                                  # For every circle
+            coverage = self._get_coverage(img, circle)                          # Check coverage of each circle
+            if coverage > self._area_threshold:                                 # If coverage is above the threshold
+                cells.append(Cell(circle[0:2], circle[2], image.get_path()))   # Append a new cell object
+        print(str(len(cells)) + " cells found.")
+        # except TypeError:
+        #     print("Warning: cell detection failed.")
+        #     print("Ensure all configuration values are correct.")
         return cells
 
     def _hough_circles(self, img):

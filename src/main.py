@@ -13,11 +13,11 @@ def main(args):
     3. evaluate
     4. save model
     5. load model
-    6. plot model
+    6. draw model
     7. save history
     8. plot history
     9. - plot filters
-    10. - diagnose
+    10. diagnose
     11. quit\n""")
         if option == "manually classify" or option == "1":
             ds.manually_classify()
@@ -29,8 +29,8 @@ def main(args):
             ds.save_model()
         elif option == "load model" or option == "5":
             ds.load_model()
-        elif option == "plot model" or option == "6":
-            ds.plot_model()
+        elif option == "draw model" or option == "6":
+            ds.draw_model()
         elif option == "save history" or option == "7":
             ds.save_history()
         elif option == "plot history" or option == "8":

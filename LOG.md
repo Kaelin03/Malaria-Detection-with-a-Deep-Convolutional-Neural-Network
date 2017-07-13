@@ -11,6 +11,42 @@ Keywords:
 * ELU = Exponential Linear Unit
 * VGG = Visual Geometry Group
 
+12/06/2017
+----------
+
+> Work on another project. 
+
+11/06/2017
+----------
+
+> Encountered a memory problem when cropping cell images from their parent image.
+> Cropping the cell required loading the larger (~66MB) parent image.
+> The cropped image would then be appended to a list.
+> Becuase the larger image was still in memory, the next list entry was stored after the image in memory. 
+> After only a few iterations of this, all memory was occupied.
+> Solution: the list was initialised to the required size before images are cropped.
+
+> Extracted the kernel weights from convolutional layers.
+
+> Completed ability to produce resultant sample images.
+
+10/06/2017
+----------
+
+> Attempted to extract kernel weights from convolutional layers. 
+
+09/06/2017
+----------
+
+> Testing of methods and re-writing/ commenting. 
+
+08/06/2017
+----------
+
+> Wrote code to plot the loss and accuracy over the training history.
+
+> Wrote code to store CNN hyper parameters and training history in a log file. 
+
 07/06/2017
 ----------
 

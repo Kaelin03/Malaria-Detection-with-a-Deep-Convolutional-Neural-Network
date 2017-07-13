@@ -14,6 +14,7 @@ from keras.optimizers import rmsprop
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
+import matplotlib as plt
 import os
 
 
@@ -80,6 +81,12 @@ class NeuralNetwork(object):
                                             epochs=self._epochs,
                                             verbose=1,
                                             validation_split=0.1)                       # Train the CNN
+        self.save_all()
+
+    def save_all(self):
+        """
+        :return:
+        """
         while True:
             option = input("Would you like to save the model? y/n\n")
             if option == "y" or option == "n":
@@ -87,11 +94,11 @@ class NeuralNetwork(object):
         if option == "y":
             self.save_model()
         while True:
-            option = input("Would you like to plot the model? y/n\n")
+            option = input("Would you like to draw the model? y/n\n")
             if option == "y" or option == "n":
                 break
         if option == "y":
-            self.plot_model()
+            self.draw_model()
         while True:
             option = input("Would you like to save the model history? y/n\n")
             if option == "y" or option == "n":
@@ -121,10 +128,13 @@ class NeuralNetwork(object):
                                           y=y,
                                           verbose=0)                                    # Evaluate using test data
             print("Class " + str(int(np.where(y[0] == 1)[0])) + ":")
+            print("\tNumber of images:" + str(x.shape[0]))
             for name, score in zip(*(self._model.metrics_names, scores)):               # Print out scores
-                print(name + ": " + str(round(score, 5)))
+                print("\t" + name + ": " + str(round(score, 5)))
+        else:
+            print("Warning: model is not yet compiled.")
 
-    def plot_model(self):
+    def draw_model(self):
         """
         Saves a diagram of the model
         :return: None
@@ -144,31 +154,57 @@ class NeuralNetwork(object):
             print("Warning: model not compiled yet.")                           # Feed back for user
 
     def plot_history(self):
-        loss = self._history.history["loss"]
-        val_loss = self._history.history["val_loss"]
-        acc = self._history.history["acc"]
-        val_acc = self._history.history["val_acc"]
-        epoch = range(len(acc))
-        plt.figure(1)
-        plt.subplot(121)
-        plt.plot(epoch, acc, "red")
-        plt.plot(epoch, val_acc, "blue")
-        plt.ylabel("Accuracy")
-        plt.xlabel("Epoch")
-        plt.grid()
-        plt.subplot(122)
-        plt.plot(epoch, loss, "red")
-        plt.plot(epoch, val_loss, "blue")
-        plt.ylabel("Loss")
-        plt.xlabel("Epoch")
-        plt.grid()
-        plt.show()
+        """
+        Saves a plot of the acc and loss
+        :return: None
+        """
+        if self._model is not None:
+            directory = "../figures"
+            self._make_path(directory)
+            loss = self._history.history["loss"]
+            val_loss = self._history.history["val_loss"]
+            acc = self._history.history["acc"]
+            val_acc = self._history.history["val_acc"]
+            epoch = range(len(acc))
+            plt.figure(1)
+            plt.subplot(121)
+            plt.plot(epoch, acc, "red", label="Accuracy")
+            plt.plot(epoch, val_acc, "blue", label="Validation accuracy")
+            plt.legend(loc=0, frameon=False)
+            plt.ylabel("Accuracy")
+            plt.xlabel("Epoch")
+            plt.grid()
+            plt.subplot(122)
+            plt.plot(epoch, loss, "red", label="Training loss")
+            plt.plot(epoch, val_loss, "blue", label="Validation loss")
+            plt.legend(loc=0, frameon=False)
+            plt.ylabel("Loss")
+            plt.xlabel("Epoch")
+            plt.grid()
+            while True:
+                save = input("Would you like to save the plot? y/n\n")
+                if save == "y" or save == "n":
+                    break
+            if save == "y":
+                plot_name = input("Enter the figure name:\n")
+                if plot_name[-4] != ".jpg" or plot_name[-4] != ".png":
+                    plot_name += ".png"
+                plt.savefig(directory + "/" + plot_name)
+            plt.show()
 
     def plot_filters(self):
+        """
+        :return:
+        """
         layer_dict = dict([(layer.name, layer) for layer in self._model.layers])
-        print(layer_dict)
+        kernels = layer_dict["conv2d_1"].get_weights()[0]
+        for i in range(kernels.shape[3]):
+            print(kernels[:, :, :, i])
 
     def save_history(self):
+        """
+        :return:
+        """
         directory = "../logs"                                                   # Set destination directory
         self._make_path(directory)                                              # Make destination directory
         filename = input("Enter the file name:\n")                              # Get file name from user
@@ -202,7 +238,7 @@ class NeuralNetwork(object):
         :return: None
         """
         if self._model is not None:
-            directory = "../models/"
+            directory = "../models"
             self._make_path(directory)
             model_name = input("Please enter the model name:\n")
             if model_name[-3] != ".h5":                                             # If extension not given
@@ -218,7 +254,7 @@ class NeuralNetwork(object):
         :return: None
         """
         model_name = input("Enter the model name:\n")
-        directory = "../models/"
+        directory = "../models"
         if model_name[-3] != ".h5":
             model_name += ".h5"
         if os.path.isfile(directory + "/" + model_name):
@@ -232,8 +268,8 @@ class NeuralNetwork(object):
         :param x: images
         :return: predicted labels for given images
         """
-        predictions = self._model.predict(x)
-        # TODO: Process and return predictions
+        predictions = self._model.predict(x, verbose=1)
+        return predictions
 
     def compile_model(self, image_shape, num_classes):
         """
@@ -242,29 +278,53 @@ class NeuralNetwork(object):
         :return:
         """
         self._model = Sequential()
+        # Conv2D, Conv2D, Pool
         self._model.add(Conv2D(self._conv_depth[0], self._kernel_size[0],
                                input_shape=image_shape,
                                padding="same",
-                               activation="relu"))
+                               activation=self._activation))
         self._model.add(Conv2D(self._conv_depth[1], self._kernel_size[1],
                                padding="same",
-                               activation="relu"))
+                               activation=self._activation))
         self._model.add(MaxPooling2D(self._pool_size[0]))
+
+        # Dropout
         self._model.add(Dropout(self._drop_prob[0]))
+
+        # Conv2D, Conv2D, Pool
         self._model.add(Conv2D(self._conv_depth[2], self._kernel_size[2],
                                padding="same",
-                               activation="relu"))
+                               activation=self._activation))
         self._model.add(Conv2D(self._conv_depth[3], self._kernel_size[3],
                                padding="same",
-                               activation="relu"))
+                               activation=self._activation))
         self._model.add(MaxPooling2D(self._pool_size[1]))
+
+        # Dropout
         self._model.add(Dropout(self._drop_prob[1]))
-        self._model.add(Flatten())
-        self._model.add(Dense(self._hidden_size[0],
-                        activation="relu"))
+
+        # Conv2D, Conv2D, Pool
+        self._model.add(Conv2D(self._conv_depth[4], self._kernel_size[4],
+                               padding="same",
+                               activation=self._activation))
+        self._model.add(Conv2D(self._conv_depth[5], self._kernel_size[5],
+                               padding="same",
+                               activation=self._activation))
+        self._model.add(MaxPooling2D(self._pool_size[2]))
+
+        # Dropout
         self._model.add(Dropout(self._drop_prob[2]))
+
+        # Flatten
+        self._model.add(Flatten())
+
+        # Dense, Dropout, Dense
+        self._model.add(Dense(self._hidden_size[0],
+                        activation=self._activation))
+        self._model.add(Dropout(self._drop_prob[3]))
         self._model.add(Dense(num_classes,
                         activation="softmax"))
+
         opt = rmsprop(lr=self._learn_rate, decay=1e-6)
 
         self._model.compile(loss="categorical_crossentropy",
@@ -273,6 +333,10 @@ class NeuralNetwork(object):
 
     @staticmethod
     def _remove_brackets(values):
+        """
+        :param values:
+        :return:
+        """
         values = str(values)
         values = values.replace("[", "")
         values = values.replace("]", "")
@@ -283,6 +347,10 @@ class NeuralNetwork(object):
 
     @staticmethod
     def _format(values):
+        """
+        :param values:
+        :return:
+        """
         values = str([value[0] for value in values])
         values = values.replace("[", "")
         values = values.replace("]", "")
@@ -291,6 +359,10 @@ class NeuralNetwork(object):
 
     @staticmethod
     def _make_path(path):
+        """
+        :param path:
+        :return:
+        """
         directories = path.split("/")                                           # Get list of directories
         path = ""                                                               # Init path string
         for directory in directories:                                           # For each directory
