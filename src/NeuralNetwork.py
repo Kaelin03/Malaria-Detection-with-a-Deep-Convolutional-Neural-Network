@@ -14,7 +14,6 @@ from keras.optimizers import rmsprop
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
-import matplotlib as plt
 import os
 
 
@@ -165,18 +164,17 @@ class NeuralNetwork(object):
             val_loss = self._history.history["val_loss"]
             acc = self._history.history["acc"]
             val_acc = self._history.history["val_acc"]
-            epoch = range(len(acc))
             plt.figure(1)
             plt.subplot(121)
-            plt.plot(epoch, acc, "red", label="Accuracy")
-            plt.plot(epoch, val_acc, "blue", label="Validation accuracy")
+            plt.plot(acc, "red", label="Accuracy")
+            plt.plot(val_acc, "blue", label="Validation accuracy")
             plt.legend(loc=0, frameon=False)
             plt.ylabel("Accuracy")
             plt.xlabel("Epoch")
             plt.grid()
             plt.subplot(122)
-            plt.plot(epoch, loss, "red", label="Training loss")
-            plt.plot(epoch, val_loss, "blue", label="Validation loss")
+            plt.plot(loss, "red", label="Training loss")
+            plt.plot(val_loss, "blue", label="Validation loss")
             plt.legend(loc=0, frameon=False)
             plt.ylabel("Loss")
             plt.xlabel("Epoch")

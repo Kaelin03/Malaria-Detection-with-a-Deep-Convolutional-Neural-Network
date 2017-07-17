@@ -68,7 +68,8 @@ class ManualClassifier(object):
             cv2.waitKey(0)                                                          # Show image and let it load
             cv2.destroyWindow(image.get_name())                                     # Destroy image window
             for i, cell in enumerate(image.get_cells()):
-                img = cell.get_image(image.get_image())                             # Get the image of the cell
+                img = cell.get_image(dx=self._image_shape[0],
+                                     dy=self._image_shape[1])                                              # Get the image of the cell
                 cv2.imshow("Cell", img)                                             # Show the cell
                 cv2.waitKey(50)                                                     # Give it time to load
                 selection = self._get_classification(self._labels)                  # Get user classification

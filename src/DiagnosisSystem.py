@@ -49,16 +49,10 @@ class DiagnosisSystem(object):
         self.update_config()
         data = []
         for label in self._train_config["labels"]:
-            directories = self._train_config["labels"][label]["directories"]
-            if directories is not None:
-                data += self._get_cell_data(directories, label)
-        if data:                                                                # If there are images
-            if self._evaluate_config["small_images"] == "ignore":
-                data = self._ignore_small(data)                                 # Remove small images
-            elif self._evaluate_config["small_images"] == "pad":
-                data = self._pad_with(data, self._image_shape, 255)             # Pad small images with zeros
-            else:
-                print("No changes made to image shapes.")
+            directories = self._train_config["labels"][label]["directories"]    # Get directories from config
+            if directories is not None:                                         # If directories are given
+                data += self._get_cell_data(directories, label)                 # Make a list of images and labels
+        if data:
             random.shuffle(data)                                                # Shuffle the data
             x, y = self._to_arrays(data, self._image_shape)                     # Put the data into numpy arrays
             x = self._resize_images(x, self._resize)                            # Resize images
@@ -75,12 +69,6 @@ class DiagnosisSystem(object):
             if directories is not None:                                                 # If directories given
                 data = self._get_cell_data(directories, label)                          # Get imgs from list of dirs
                 if data:                                                                # If there are images
-                    if self._evaluate_config["small_images"] == "ignore":
-                        data = self._ignore_small(data)                                 # Remove small images
-                    elif self._evaluate_config["small_images"] == "pad":
-                        data = self._pad_with(data, self._image_shape, 255)             # Pad small images with zeros
-                    else:
-                        print("No changes made to image shapes.")
                     x, y = self._to_arrays(data, self._image_shape)
                     x = self._resize_images(x, self._resize)                            # Resize images
                     x = self._normalise(x)
@@ -151,7 +139,7 @@ class DiagnosisSystem(object):
                     cell.draw(img)
                 self._save_image(img,
                                  image.get_name() + "." + image.get_type(),
-                                 "../" + self._diagnose_config["destination"])
+                                 "../" + self._diagnose_config["destination"] + "/" + sample.get_id())
             print("Sample id: " + sample.get_id())
             print("\tTotal cells: " + str(sample.total_cells()))
             print("\tHealthy cells: " + str(sample.total_cells(0)))
@@ -276,7 +264,7 @@ class DiagnosisSystem(object):
         if not all(class_freq[0] == item for item in class_freq):
             print("Warning: unbalanced data, " + str(class_freq) + ".")
             while True:
-                cont = input("Continue ? y/n\n")
+                cont = input("Continue? y/n\n")
                 if cont == "y":
                     break
                 elif cont == "n":
@@ -306,10 +294,11 @@ class DiagnosisSystem(object):
         :return:
         """
         y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
-        x = np.empty((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
-        for i, item in enumerate(data):                                             # Put data into numpy arrays
-            x[i] = item[0]                                                          # x contains images
-            y[i] = item[1]                                                          # y contains labels
+        x = np.zeros((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
+        for i, (image, label) in enumerate(data):                                   # Put data into numpy arrays
+            height, width, depth = image.shape
+            x[i, 0:height, 0:width, 0:depth] = image                                                            # x contains images
+            y[i] = label                                                            # y contains labels
         return x, y
 
     @staticmethod

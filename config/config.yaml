@@ -28,7 +28,7 @@ neural_network:
         32
     epochs:     
         # Number of times to iterate over tge entire training set (int)
-        120
+        2
     target_loss:
         # Loss value at which the training will stop (float) NOT IMPLEMENTED YET
     kernel_size:    
@@ -100,20 +100,20 @@ manual_classifier:
             # - "train/samples/57546/57546_12.jpg"
             # - "train/samples/57546/57546_13.jpg"
             # - "train/samples/57546/57546_14.jpg"
-            - "train/samples/57546/57546_15.jpg"
-            - "train/samples/57546/57546_16.jpg"
+            # - "train/samples/57546/57546_15.jpg"
+            # - "train/samples/57546/57546_16.jpg"
         destination:
             # Destination path for classified images (string)
             "train/cells" 
     test: 
         files:
             # Paths to be classified for evaluation (list of strings)
-            - "test/samples/57546/57546_17.jpg"
-            - "test/samples/57546/57546_18.jpg"
-            - "test/samples/57546/57546_19.jpg"
-            - "test/samples/57546/57546_20.jpg"
-            - "test/samples/57546/57546_21.jpg"
-            - "test/samples/57546/57546_22.jpg"
+            # - "test/samples/57546/57546_17.jpg"
+            # - "test/samples/57546/57546_18.jpg"
+            # - "test/samples/57546/57546_19.jpg"
+            # - "test/samples/57546/57546_20.jpg"
+            # - "test/samples/57546/57546_21.jpg"
+            # - "test/samples/57546/57546_22.jpg"
             - "test/samples/57546/57546_23.jpg"
             # - "test/samples/57546/57546_24.jpg"
         destination: 
