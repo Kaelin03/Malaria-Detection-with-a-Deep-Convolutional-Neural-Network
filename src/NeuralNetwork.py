@@ -25,6 +25,7 @@ class NeuralNetwork(object):
         :param yaml_path: path to the configuration file
         """
         self._yaml_path = "../config/" + yaml_path
+        self._name = ""
         self._kernel_size = None
         self._batch_size = None
         self._augment = None
@@ -39,6 +40,18 @@ class NeuralNetwork(object):
         self._history = None
         self._train_size = None
         self.update_config()
+
+    def is_ready(self):
+        if self._model is None:
+            return False
+        else:
+            return True
+
+    def get_name(self):
+        """
+        :return:
+        """
+        return self._name
 
     def update_config(self):
         """
@@ -80,6 +93,10 @@ class NeuralNetwork(object):
                                             epochs=self._epochs,
                                             verbose=1,
                                             validation_split=0.1)                       # Train the CNN
+        while True:
+            self._name = input("Please enter a name for the model:\n")
+            if self._name != "":
+                break
         self.save_all()
 
     def save_all(self):
@@ -141,7 +158,9 @@ class NeuralNetwork(object):
         if self._model is not None:
             directory = "../models/diagrams"                                    # Set destination directory
             self._make_path(directory)                                          # Make destination directory
-            model_name = input("Enter the image name:\n")                       # Get file name from user
+            model_name = input("Enter the image name (default is model name):\n")
+            if not model_name:
+                model_name = self._name
             if model_name[-4] != ".jpg" or model_name[-4] != ".png":            # If extension not given
                 model_name += ".png"                                            # Add extension
             plot_model(self._model,
@@ -184,20 +203,13 @@ class NeuralNetwork(object):
                 if save == "y" or save == "n":
                     break
             if save == "y":
-                plot_name = input("Enter the figure name:\n")
+                plot_name = input("Enter the figure name (default is model name):\n")
+                if plot_name == "":
+                    plot_name = self._name
                 if plot_name[-4] != ".jpg" or plot_name[-4] != ".png":
                     plot_name += ".png"
                 plt.savefig(directory + "/" + plot_name)
             plt.show()
-
-    def plot_filters(self):
-        """
-        :return:
-        """
-        layer_dict = dict([(layer.name, layer) for layer in self._model.layers])
-        kernels = layer_dict["conv2d_1"].get_weights()[0]
-        for i in range(kernels.shape[3]):
-            print(kernels[:, :, :, i])
 
     def save_history(self):
         """
@@ -205,7 +217,9 @@ class NeuralNetwork(object):
         """
         directory = "../logs"                                                   # Set destination directory
         self._make_path(directory)                                              # Make destination directory
-        filename = input("Enter the file name:\n")                              # Get file name from user
+        filename = input("Enter the image name (default is model name):\n")
+        if not filename:
+            filename = self._name
         if filename[-4] != ".csv" or filename[-4] != ".txt":                    # If extension not given
             filename += ".csv"                                                  # Add extension
         file = open(directory + "/" + filename, "w")                            # Open file
@@ -238,7 +252,7 @@ class NeuralNetwork(object):
         if self._model is not None:
             directory = "../models"
             self._make_path(directory)
-            model_name = input("Please enter the model name:\n")
+            model_name = self._name
             if model_name[-3] != ".h5":                                             # If extension not given
                 model_name += ".h5"                                                 # Add extension
             self._model.save(filepath=directory + "/" + model_name)                 # Save model
@@ -257,6 +271,7 @@ class NeuralNetwork(object):
             model_name += ".h5"
         if os.path.isfile(directory + "/" + model_name):
             self._model = load_model(directory + "/" + model_name)
+            self._name = model_name[0:-3]
             print("Successfully loaded " + model_name + ".")
         else:
             print("Warning: " + directory + "/" + model_name + " not found.")

@@ -1,0 +1,50 @@
+# PARAMETERS FOR MALARIA MANUAL CLASSIFICATION
+
+image_height:
+    # Height to which cells will be cropped (int)
+    80
+
+image_width:
+    # Width to which cells will be cropped (int)
+    80
+
+labels: 
+    # Labels that can be assigned to images (list of strings)
+    - falciparum
+    - healthy
+    - not
+
+files:
+    # Paths to individual images for classification (list of strings)
+    - "samples/train/57549/57549_04.jpg"
+
+destination:
+    # Destination path for classified images (string)
+    "cells/train"
+
+cell_detector:
+    # Parameters for cell detector
+    kernel_size:
+        # Kernel size for applying Gaussian blur (int)
+        5
+
+    tolerance:
+        # Tolerance in micrometers of red blood cell radius (float)
+        0.5
+
+    radius:
+        # Radius of a red blood cell in micrometers (float)
+        3.5
+
+    minimum_distance:
+        # Minimum permissible distance between red blood cell centres (int)
+        # Will be set automatically if zero. 
+        0
+
+    pixels_per_micrometer:
+        # The number of pixels for each micrometer of image (int)
+        10
+        
+    area_threshold:
+        # Percentage of the circle that should contant a cell (float)
+        65

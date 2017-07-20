@@ -19,11 +19,11 @@ class Sample(object):
         """
         self._images.append(Image(image_path))
 
-    def total_cells(self, status=None):
+    def total_cells(self, prediction=None):
         """
         :return:
         """
-        return sum([image.total_cells(status) for image in self._images])
+        return sum([image.total_cells(prediction) for image in self._images])
 
     def get_images(self):
         """

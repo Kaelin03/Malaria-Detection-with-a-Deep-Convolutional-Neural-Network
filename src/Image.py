@@ -13,7 +13,18 @@ class Image(object):
         self._name = path.split("/")[-1].split(".")[-2]     # Extract the name of the image from that path
         self._type = path.split("/")[-1].split(".")[-1]     # Extract the image type from the path
         self._id = self._name.split("_")[-1]                # Extract the image id number from the name
-        self._cells = []
+        self._sample_id = self._name.split("_")[0]          # Extract the sample id from the name
+        self._cells = []                                    # List of cell objects associated with the Image
+
+    def draw_cells(self, col=None, width=2):
+        """
+        :param col: rbg tuple to describe colour
+        :param width: int to describe the width of the line
+        :return: image containing annotated cells
+        """
+        img = cv2.imread(self._path)
+        [cell.draw(img, col, width) for cell in self._cells]
+        return img
 
     def add_cell(self, cell):
         """
@@ -22,18 +33,14 @@ class Image(object):
         """
         self._cells.append(cell)
 
-    def total_cells(self, status=None):
+    def total_cells(self, prediction=None):
         """
         :return:
         """
-        if status is None:
+        if prediction is None:
             return len(self._cells)
         else:
-            n = 0
-            for cell in self._cells:
-                if cell.get_status() == status:
-                    n += 1
-            return n
+            return len([1 for cell in self._cells if cell.get_prediction() == prediction])
 
     def add_cells(self, cells):
         """
@@ -43,27 +50,26 @@ class Image(object):
         for cell in cells:
             self.add_cell(cell)
 
-    def draw_cells(self, img, col=(0, 255, 0), width=2):
-        """
-        :param img:
-        :param col:
-        :param width:
-        :return:
-        """
-        for cell in self._cells:
-            cell.draw(img, col, width)
-
-    def get_cells(self):
+    def get_cells(self, complete=False):
         """
         :return:
         """
-        return self._cells
+        if complete:
+            return [cell for cell in self._cells if cell.is_complete()]
+        else:
+            return self._cells
 
     def get_id(self):
         """
         :return:
         """
         return self._id
+
+    def get_sample_id(self):
+        """
+        :return:
+        """
+        return self._sample_id
 
     def get_path(self):
         """

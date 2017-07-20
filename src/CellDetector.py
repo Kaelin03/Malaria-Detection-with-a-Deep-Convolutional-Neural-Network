@@ -55,11 +55,10 @@ class CellDetector(object):
         for circle in circles:                                                  # For every circle
             coverage = self._get_coverage(img, circle)                          # Check coverage of each circle
             if coverage > self._area_threshold:                                 # If coverage is above the threshold
-                cells.append(Cell(circle[0:2], circle[2], image.get_path()))   # Append a new cell object
+                cell = Cell(circle[0:2], circle[2], image.get_path())
+                cell.set_complete(self._is_complete(img.shape, cell))
+                cells.append(cell)                                              # Append a new cell object
         print(str(len(cells)) + " cells found.")
-        # except TypeError:
-        #     print("Warning: cell detection failed.")
-        #     print("Ensure all configuration values are correct.")
         return cells
 
     def _hough_circles(self, img):
@@ -112,6 +111,21 @@ class CellDetector(object):
                         non_black += 1                                              # Add one to total non_black pixels
         percentage = black / float(black + non_black) * 100                         # Percentage of black pixels
         return percentage
+
+    @staticmethod
+    def _is_complete(shape, cell):
+        pos = cell.get_position()
+        rad = cell.get_radius()
+        if pos[0] - rad < 0:
+            return False
+        elif pos[1] - rad < 0:
+            return False
+        elif pos[0] + rad > shape[1]:
+            return False
+        elif pos[1] + rad > shape[0]:
+            return False
+        else:
+            return True
 
     @staticmethod
     def _pythagoras(a, b):

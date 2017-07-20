@@ -3,9 +3,19 @@
 import os
 import cv2
 import yaml
+import argparse
 
 from Image import Image
 from CellDetector import CellDetector
+
+
+def main(args):
+    """
+    :param args:
+    :return:
+    """
+    mc = ManualClassifier(args.config)
+    mc.run()
 
 
 class ManualClassifier(object):
@@ -17,11 +27,9 @@ class ManualClassifier(object):
         """
         self._yaml_path = "../config/" + yaml_path
         self._labels = []
+        self._images = []
         self._image_shape = None
-        self._train_images = []
-        self._test_images = []
-        self._train_destination = None
-        self._test_destination = None
+        self._destination = None
         self._cell_detector = CellDetector(yaml_path)
         self.update_config()
 
@@ -31,13 +39,12 @@ class ManualClassifier(object):
         :return: None
         """
         try:
-            config = self._get_yaml_dict(self._yaml_path)["manual_classifier"]  # Get configurations from the yaml path
-            self._image_shape = (config["image_width"], config["image_height"]) # Get the desired cell image size
+            config = self._get_yaml_dict(self._yaml_path)                       # Get configurations from the yaml path
+            self._image_shape = (config["image_width"],
+                                 config["image_height"])                        # Get the desired cell image size
             self._labels = config["labels"]                                     # Get the possible labels
-            self._train_images = self._get_images(config["train"]["files"])     # Get the train images
-            self._test_images = self._get_images(config["test"]["files"])       # Get the test images
-            self._train_destination = "../" + config["train"]["destination"]    # Destination will start one level above
-            self._test_destination = "../" + config["test"]["destination"]      # Destination will start one level above
+            self._images = self._get_images(config["files"])                    # Get the train images
+            self._destination = "../" + config["destination"]                   # Destination will start one level above
         except KeyError:
             print("Warning: Some entries were missing from the manual_classifier configurations.")
 
@@ -47,36 +54,26 @@ class ManualClassifier(object):
         :return: None
         """
         self.update_config()
-        if self._train_images:
-            self._detect_and_show(self._train_images, self._train_destination)
-        if self._test_images:
-            self._detect_and_show(self._test_images, self._test_destination)
-
-    def _detect_and_show(self, images, destination):
-        """
-        :param images: a list of Image objects
-        :param destination: directory to save images in
-        :return:
-        """
-        for image in images:
-            cells = self._cell_detector.run(image)
-            image.add_cells(cells)
-            img = image.get_image()
-            image.draw_cells(img)
-            img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)                         # Resize to 1/4 scale
-            cv2.imshow(image.get_name(), img)                                       # Display image
-            cv2.waitKey(0)                                                          # Show image and let it load
-            cv2.destroyWindow(image.get_name())                                     # Destroy image window
-            for i, cell in enumerate(image.get_cells()):
-                img = cell.get_image(dx=self._image_shape[0],
-                                     dy=self._image_shape[1])                                              # Get the image of the cell
-                cv2.imshow("Cell", img)                                             # Show the cell
-                cv2.waitKey(50)                                                     # Give it time to load
-                selection = self._get_classification(self._labels)                  # Get user classification
-                self._save_cell(img, selection, destination, image, i)              # Save cell
-                if selection == "q" or selection == str(len(self._labels) + 1):     # If user selects quit
-                    break
-            cv2.destroyWindow("Cell")                                               # Destroy cell window
+        if self._images:
+            for image in self._images:
+                cells = self._cell_detector.run(image)
+                image.add_cells(cells)
+                img = image.get_image()
+                image.draw_cells(img)
+                img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)                 # Resize to 1/4 scale
+                cv2.imshow(image.get_name(), img)                               # Display image
+                cv2.waitKey(0)                                                  # Show image and let it load
+                cv2.destroyWindow(image.get_name())                             # Destroy image window
+                for i, cell in enumerate(image.get_cells()):
+                    img = cell.get_image(dx=self._image_shape[0],
+                                         dy=self._image_shape[1])               # Get the image of the cell
+                    cv2.imshow("Cell", img)                                     # Show the cell
+                    cv2.waitKey(50)                                             # Give it time to load
+                    selection = self._get_classification(self._labels)          # Get user classification
+                    self._save_cell(img, selection, self._destination, image, i)        # Save cell
+                    if selection == "q":                                        # If user selects quit
+                        break
+                cv2.destroyWindow("Cell")                                       # Destroy cell window
 
     def _save_cell(self, img, selection, destination, image, nb):
         """
@@ -90,16 +87,16 @@ class ManualClassifier(object):
         saved = False
         image_name = image.get_name() + "_" + str(nb) + "." + image.get_type()      # Make image name
         for label in self._labels:
-            cond_1 = selection == label[0]                                          # Selection matches first letter
-            cond_2 = selection == str(self._labels.index(label) + 1)                # Selection matches label index
-            if cond_1 or cond_2:
-                image_dir = destination + "/" + label + "/" + image.get_name()      # Directory to save image in
+            if selection == label[0]:
+                image_dir = destination + "/" + label + "/" + \
+                            image.get_sample_id() + "/" + image.get_name()          # Directory to save image in
                 self._save_image(img, image_name, image_dir)                        # Save image
                 print("Saving to " + image_dir + "/" + image_name)                  # Feedback
                 saved = True                                                        # Flag that image has been saved
-        if not saved and selection != "q" and selection != str(len(self._labels) + 1):
-            image_dir = destination + "/unused/" + image.get_name()                 # Destination is unused folder
-            self._save_image(img, image_name, image_dir)                            # Save image
+        if not saved and selection != "q":
+            image_dir = destination + "/unused/" + \
+                        image.get_sample_id() + "/" + image.get_name()              # Destination for the image
+            self._save_image(img, image_name, image_dir)                            # Save image to unused
             print("Saving to " + image_dir + "/" + image_name)                      # Feedback
 
     def _get_images(self, files):
@@ -159,8 +156,8 @@ class ManualClassifier(object):
         """
         print("Classify the cell:")
         for j, label in enumerate(labels):                                          # For each label
-            print("\t" + str(j + 1) + ". " + label[0] + " - " + label)              # Print options
-        print("\t" + str(len(labels) + 1) + ". q - quit")                           # Show option to quit
+            print("\t" + label[0] + " - " + label)                                  # Print options
+        print("\t" + "q - quit")                                                    # Show option to quit
         return input("")
 
     @staticmethod
@@ -176,3 +173,9 @@ class ManualClassifier(object):
         else:
             print("Warning: " + yaml_path + " not found.")
         return yaml_dict
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="config.yaml")
+    arguments = parser.parse_args()
+    main(arguments)

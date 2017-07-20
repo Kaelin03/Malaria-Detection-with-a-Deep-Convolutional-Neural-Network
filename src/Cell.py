@@ -6,16 +6,24 @@ import cv2
 class Cell(object):
 
     def __init__(self, position, radius, path):
+        """
+        :param position:
+        :param radius:
+        :param path:
+        """
         self._path = path
+        self._name = path.split("/")[-1].split(".")[0]
         self._position = tuple(map(int, position))
         self._radius = int(radius)
-        self._status = None
-        
+        self._complete = None
+        self._prediction = None
+        self._confidence = None
+        self._label = None
+
     def get_image(self, dx=0, dy=0):
         """
         Crop the image with the cell in the centre
         If dx and dy are not give, the crop will be to the cell radius
-        :param image: image to crop
         :param dx: width to crop the image to
         :param dy: height to crop the image to
         :return: cropped image
@@ -32,6 +40,12 @@ class Cell(object):
         y2 = int(min(self._position[1] + dy / 2, height))
         return image[y1:y2, x1:x2, :]
 
+    def get_name(self, nb):
+        """
+        :return:
+        """
+        return self._name + "_" + str(nb)
+
     def draw(self, image, col=None, width=2):
         """
         Draws a circle around the cell on a given image
@@ -40,9 +54,9 @@ class Cell(object):
         :param width: width of the line
         """
         if col is None:
-            if self._status == 0:
+            if self._prediction == 0:
                 col = (0, 255, 0)
-            elif self._status == 1:
+            elif self._prediction == 1:
                 col = (0, 0, 255)
         cv2.circle(image, self._position, self._radius, col, width)
 
@@ -58,15 +72,54 @@ class Cell(object):
         """
         return self._radius
 
-    def get_status(self):
+    def get_prediction(self):
         """
         :return: status of the cell
         """
-        return self._status
+        return self._prediction
 
-    def set_status(self, status):
+    def set_prediction(self, prediction):
         """
-        :param status:
+        :param prediction:
         :return:
         """
-        self._status = status
+        self._prediction = prediction
+
+    def get_label(self):
+        """
+        :return:
+        """
+        return self._label
+
+    def set_label(self, label):
+        """
+        :param label:
+        :return:
+        """
+        self._label = label
+
+    def set_complete(self, complete):
+        """
+        :param complete:
+        :return:
+        """
+        self._complete = complete
+
+    def is_complete(self):
+        """
+        :return:
+        """
+        return self._complete
+
+    def set_confidence(self, confidence):
+        """
+        :param confidence:
+        :return:
+        """
+        self._confidence = confidence
+
+    def get_confidence(self):
+        """
+        :return:
+        """
+        return self._confidence
