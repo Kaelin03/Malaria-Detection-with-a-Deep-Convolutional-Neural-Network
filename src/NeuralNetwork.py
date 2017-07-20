@@ -103,30 +103,11 @@ class NeuralNetwork(object):
         """
         :return:
         """
-        while True:
-            option = input("Would you like to save the model? y/n\n")
-            if option == "y" or option == "n":
-                break
-        if option == "y":
-            self.save_model()
-        while True:
-            option = input("Would you like to draw the model? y/n\n")
-            if option == "y" or option == "n":
-                break
-        if option == "y":
-            self.draw_model()
-        while True:
-            option = input("Would you like to save the model history? y/n\n")
-            if option == "y" or option == "n":
-                break
-        if option == "y":
-            self.save_history()
-        while True:
-            option = input("Would you like to plot the model history? y/n\n")
-            if option == "y" or option == "n":
-                break
-        if option == "y":
-            self.plot_history()
+        self.save_model()
+        self.save_parameters()
+        self.draw_model()
+        self.save_history()
+        self.plot_history()
 
     def evaluate(self, x, y, num_classes=0):
         """
@@ -158,11 +139,7 @@ class NeuralNetwork(object):
         if self._model is not None:
             directory = "../models/diagrams"                                    # Set destination directory
             self._make_path(directory)                                          # Make destination directory
-            model_name = input("Enter the image name (default is model name):\n")
-            if not model_name:
-                model_name = self._name
-            if model_name[-4] != ".jpg" or model_name[-4] != ".png":            # If extension not given
-                model_name += ".png"                                            # Add extension
+            model_name = self._name + ".png"
             plot_model(self._model,
                        to_file=directory + "/" + model_name,
                        show_shapes=True,
@@ -177,7 +154,7 @@ class NeuralNetwork(object):
         :return: None
         """
         if self._model is not None:
-            directory = "../figures"
+            directory = "../models/plots"
             self._make_path(directory)
             loss = self._history.history["loss"]
             val_loss = self._history.history["val_loss"]
@@ -198,42 +175,41 @@ class NeuralNetwork(object):
             plt.ylabel("Loss")
             plt.xlabel("Epoch")
             plt.grid()
-            while True:
-                save = input("Would you like to save the plot? y/n\n")
-                if save == "y" or save == "n":
-                    break
-            if save == "y":
-                plot_name = input("Enter the figure name (default is model name):\n")
-                if plot_name == "":
-                    plot_name = self._name
-                if plot_name[-4] != ".jpg" or plot_name[-4] != ".png":
-                    plot_name += ".png"
-                plt.savefig(directory + "/" + plot_name)
+            plot_name = self._name + ".png"
+            plt.savefig(directory + "/" + plot_name)
+            print("Plot saved to " + directory + "/" + plot_name)
             plt.show()
+
+    def save_parameters(self):
+        """
+        :return:
+        """
+        directory = "../models/parameters"
+        self._make_path(directory)
+        filename = self._name + ".txt"
+        file = open(directory + "/" + filename, "w")
+        file.write("Name: " + self._name + "\n")
+        file.write("Epochs: " + str(self._epochs) + "\n")
+        file.write("Kernel size: " + str(self._kernel_size) + "\n")
+        file.write("Hidden size: " + str(self._hidden_size) + "\n")
+        file.write("Pool size: " + str(self._pool_size) + "\n")
+        file.write("Conv depth: " + str(self._conv_depth) + "\n")
+        file.write("Drop prob: " + str(self._drop_prob) + "\n")
+        file.write("Learn rate: " + str(self._learn_rate) + "\n")
+        file.write("Augment: " + str(self._augment) + "\n")
+        file.write("Activation: " + str(self._activation) + "\n")
+        file.write("Train size: " + str(self._train_size) + "\n\n")
+        file.close()
+        print("Record of parameters saved to " + directory + "/" + filename)
 
     def save_history(self):
         """
         :return:
         """
-        directory = "../logs"                                                   # Set destination directory
+        directory = "../models/history"                                         # Set destination directory
         self._make_path(directory)                                              # Make destination directory
-        filename = input("Enter the image name (default is model name):\n")
-        if not filename:
-            filename = self._name
-        if filename[-4] != ".csv" or filename[-4] != ".txt":                    # If extension not given
-            filename += ".csv"                                                  # Add extension
+        filename = self._name + ".csv"
         file = open(directory + "/" + filename, "w")                            # Open file
-        file.write("epochs," + str(self._epochs) + "\n")
-        file.write("kernel size," + self._format(self._kernel_size) + "\n")
-        file.write("hidden size," + self._remove_brackets(self._hidden_size) + "\n")
-        file.write("pool size," + self._format(self._pool_size) + "\n")
-        file.write("conv depth," + self._remove_brackets(self._conv_depth) + "\n")
-        file.write("drop prob," + self._remove_brackets(self._drop_prob) + "\n")
-        file.write("learn rate," + str(self._learn_rate) + "\n")
-        file.write("augment," + str(self._augment) + "\n")
-        file.write("activation," + str(self._activation) + "\n")
-        file.write("batch size," + str(self._batch_size) + "\n")
-        file.write("train size," + self._remove_brackets(self._train_size) + "\n\n")
         keys = [key for key in self._history.history]                           # For each key in the history dict
         epochs = len(self._history.history[keys[0]])                            # Get the total number of epochs
         file.write(",".join(keys) + "\n")                                       # Make a comma sep. string from keys
@@ -343,32 +319,6 @@ class NeuralNetwork(object):
         self._model.compile(loss="categorical_crossentropy",
                             optimizer=opt,
                             metrics=["accuracy"])
-
-    @staticmethod
-    def _remove_brackets(values):
-        """
-        :param values:
-        :return:
-        """
-        values = str(values)
-        values = values.replace("[", "")
-        values = values.replace("]", "")
-        values = values.replace("(", "")
-        values = values.replace(")", "")
-        values = values.replace(" ", "")
-        return values
-
-    @staticmethod
-    def _format(values):
-        """
-        :param values:
-        :return:
-        """
-        values = str([value[0] for value in values])
-        values = values.replace("[", "")
-        values = values.replace("]", "")
-        values = values.replace(" ", "")
-        return values
 
     @staticmethod
     def _make_path(path):

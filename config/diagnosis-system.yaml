@@ -35,20 +35,20 @@ neural_network:
 
     epochs:     
         # Number of times to iterate over tge entire training set (int)
-        3
+        2
 
     kernel_size:    
         # Kernel size to be used throughout (list of ints)
-        - 4
-        - 4
-        - 5
-        - 5
-        - 6
-        - 6
+        - 3
+        - 3
+        - 3
+        - 3
+        - 3
+        - 3
 
     hidden_size:    
         # Number of nerons in the fully-connected layer (list of ints)
-        - 1024
+        - 512
 
     pool_size:     
          # Pooling size to be used throughout (list of ints)
@@ -62,8 +62,8 @@ neural_network:
         - 32
         - 32
         - 32
-        - 64
-        - 64
+        - 32
+        - 32
 
     drop_prob:
         # Probability of a node droping out when training (list of ints)
@@ -164,7 +164,7 @@ evaluate:
 diagnose:
     # Paths to directory of images that require diagnosis (list of strings)
     directories: 
-        - "samples/test/57546"
+        - "samples/test/57549"
 
     destination: 
     # Paths to directory to which results will be saved (string)

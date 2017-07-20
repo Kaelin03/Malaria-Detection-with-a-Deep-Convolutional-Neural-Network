@@ -5,14 +5,17 @@ import cv2
 
 class Cell(object):
 
-    def __init__(self, position, radius, path):
+    def __init__(self, position, radius, path, nb):
         """
         :param position:
         :param radius:
         :param path:
         """
+        self._nb = nb
         self._path = path
-        self._name = path.split("/")[-1].split(".")[0]
+        self._id = path.split("/")[-1].split(".")[0] + "_" + str(nb)
+        self._sample_id = self._id.split("_")[0]
+        self._image_id = self._id.split("_")[1]
         self._position = tuple(map(int, position))
         self._radius = int(radius)
         self._complete = None
@@ -40,11 +43,29 @@ class Cell(object):
         y2 = int(min(self._position[1] + dy / 2, height))
         return image[y1:y2, x1:x2, :]
 
-    def get_name(self, nb):
+    def get_id(self):
         """
         :return:
         """
-        return self._name + "_" + str(nb)
+        return self._id
+
+    def get_nb(self):
+        """
+        :return:
+        """
+        return self._nb
+
+    def get_sample_id(self):
+        """
+        :return:
+        """
+        return self._sample_id
+
+    def get_image_id(self):
+        """
+        :return:
+        """
+        return self._image_id
 
     def draw(self, image, col=None, width=2):
         """

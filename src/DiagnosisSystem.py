@@ -22,30 +22,18 @@ def main(args):
         option = input("""What would you like to do?
     1. train
     2. load model
-    3. save model
-    4. draw model
-    5. save history
-    6. plot history
-    7. evaluate
-    8. diagnose
-    9. quit\n""")
+    3. evaluate
+    4. diagnose
+    5. quit\n""")
         if option == "train" or option == "1":
             ds.train()
         elif option == "load model" or option == "2":
             ds.load_model()
-        elif option == "save model" or option == "3":
-            ds.save_model()
-        elif option == "draw model" or option == "4":
-            ds.draw_model()
-        elif option == "save history" or option == "5":
-            ds.save_history()
-        elif option == "plot history" or option == "6":
-            ds.plot_history()
-        elif option == "evaluate" or option == "7":
+        elif option == "evaluate" or option == "3":
             ds.evaluate()
-        elif option == "diagnose" or option == "8":
+        elif option == "diagnose" or option == "4":
             ds.diagnose()
-        elif option == "quit" or option == "9":
+        elif option == "quit" or option == "5":
             break
         else:
             print("Invalid selection.")
@@ -93,7 +81,7 @@ class DiagnosisSystem(object):
                 data += self._get_cell_data(directories, label)                 # Make a list of images and labels
         if data:
             random.shuffle(data)                                                # Shuffle the data
-            x, y = self._to_arrays(data, self._image_shape)                     # Put the data into numpy arrays
+            x, y = self._list_to_arrays(data, self._image_shape)                # Put the data into numpy arrays
             x = self._normalise(x)
             cont = self._check_balance(y)                                       # Check that data is balanced
             if cont:
@@ -140,7 +128,7 @@ class DiagnosisSystem(object):
             if directories is not None:                                                 # If directories given
                 data = self._get_cell_data(directories, label)                          # Get imgs from list of dirs
                 if data:                                                                # If there are images
-                    x, y = self._to_arrays(data, self._image_shape)
+                    x, y = self._list_to_arrays(data, self._image_shape)
                     x = self._normalise(x)
                     self._neural_network.evaluate(x, y, num_classes=num_classes)
 
@@ -156,7 +144,8 @@ class DiagnosisSystem(object):
                 print("Diagnosing sample " + sample.get_id() + "...")
                 for image in sample.get_images():                                           # Gor each image
                     image.add_cells(self._cell_detector.run(image))                         # Add cells to image
-                    x = self._to_array(image.get_cells(complete=True), self._image_shape)
+                    x = self._cells_to_arrays(image.get_cells(complete=True),
+                                              self._image_shape)                            # Np array of images
                     x = self._normalise(x)                                                  # Normalise the array
                     predictions = self._neural_network.predict(x)                           # Get array predictions
                     for i, cell in enumerate(image.get_cells(complete=True)):
@@ -214,9 +203,9 @@ class DiagnosisSystem(object):
 
     def _get_cell_data(self, directories, label):
         """
-        :param directories:
-        :param label:
-        :return:
+        :param directories: list of paths to directories containing cells
+        :param label: label to describe the cells in the directories
+        :return: list of images and labels
         """
         data = []
         small = 0
@@ -226,9 +215,9 @@ class DiagnosisSystem(object):
                 image_paths = os.listdir(directory)                                 # Get the file names in the dir
                 image_paths = [directory + "/" + path for path in image_paths]      # Get the full file path
                 image_paths = self._check_images(image_paths)                       # Check the files are images
-                for path in image_paths:
-                    img = cv2.imread(path)
-                    if img.shape == self._image_shape:
+                for path in image_paths:                                            # For each cell path
+                    img = cv2.imread(path)                                          # Get the cell image
+                    if img.shape == self._image_shape:                              # If image is the required shape
                         data.append([img, label])                                   # Append image and label to data
                     else:
                         small += 1
@@ -239,41 +228,48 @@ class DiagnosisSystem(object):
 
     def _save_cells(self, cells, destination):
         """
-        :param cells:
-        :param destination:
-        :return:
+        :param cells: list of Cell objects
+        :param destination: directory to save the cells in
         """
-        for i, cell in enumerate(cells):
-            if cell.get_prediction() == 0:
-                label = "healthy"
-            elif cell.get_prediction() == 1:
-                label = "falciparum"
+        for cell in cells:                                                          # For each cell
+            if cell.get_prediction() == 0:                                          # If cell prediction is healthy
+                folder = "healthy"                                                  # Set folder to healthy
+            elif cell.get_prediction() == 1:                                        # If cell prediction is infected
+                folder = "falciparum"                                               # Set folder to falciparum
             else:
-                label = "unclassified"
-            directory = destination + "/" + label
-            self._save_image(cell.get_image(), cell.get_name(i) + ".jpg", directory)
+                folder = "unclassified"                                             # Set folder to unclassified
+            directory = destination + "/" + folder                                  # Set destination directory
+            self._save_image(cell.get_image(),
+                             cell.get_id() + ".jpg",
+                             directory)                                             # Save image of cell
 
     @staticmethod
     def _log_cells(cells, destination):
-        filename = destination + "/results.csv"
-        file = open(filename, "w")
-        file.write("Cell,X,Y,Prediction,Confidence,Complete\n")
-        for i, cell in enumerate(cells):
-            attributes = [cell.get_name(i),
+        """
+        :param cells: list of Cell objects
+        :param destination: directory in which to save the log
+        """
+        filename = destination + "/results.csv"                                     # Set name of log file
+        file = open(filename, "w")                                                  # Open the log file
+        file.write("Sample,Image,Cell,X,Y,Prediction,Confidence,Complete\n")        # Write the column headers
+        for i, cell in enumerate(cells):                                            # For each cell
+            attributes = [cell.get_sample_id(),                                     # Get the cell attributes
+                          cell.get_image_id(),
+                          cell.get_nb(),
                           cell.get_position()[0],
                           cell.get_position()[1],
                           cell.get_prediction(),
                           cell.get_confidence(),
                           cell.is_complete()]
-            file.write(",".join(list(map(str, attributes))) + "\n")
-        file.close()
-        print("Log saved to " + filename + ".")
+            file.write(",".join(list(map(str, attributes))) + "\n")                 # Print attributes, comma separated
+        file.close()                                                                # Close file
+        print("Log saved to " + filename + ".")                                     # Tell user where to find the log
 
     @staticmethod
     def _normalise(x):
         """
-        :param x:
-        :return:
+        :param x: numpy array of images
+        :return x: numpy array of normalised images
         """
         x = x.astype("float32")                                                     # Convert to float32
         x /= 255                                                                    # Normalise
@@ -282,18 +278,16 @@ class DiagnosisSystem(object):
     @staticmethod
     def _check_balance(y):
         """
-        :param y:
-        :return:
+        :param y: numpy array of labels
+        :return: bool to signify if the user wishes to continue
         """
+        cont = True                                                                 # Signify to continue
         classes = np.unique(y)                                                      # Find the number of classes
-        class_freq = []
-        cont = True
-        for label in classes:
-            class_freq.append((np.sum(y == label)))
-        if not all(class_freq[0] == item for item in class_freq):
-            print("Warning: unbalanced data, " + str(class_freq) + ".")
+        class_freq = [np.sum(y == label) for label in classes]                      # Get the frequency of each class
+        if not all(class_freq[0] == item for item in class_freq):                   # If class freq values are not equal
+            print("Warning: unbalanced data, " + str(class_freq) + ".")             # The data set is unbalanced
             while True:
-                cont = input("Continue? y/n\n")
+                cont = input("Continue? y/n\n")                                     # Ask user if they want to continue
                 if cont == "y":
                     break
                 elif cont == "n":
@@ -304,19 +298,19 @@ class DiagnosisSystem(object):
     @staticmethod
     def _get_sample_index(samples, sample_id):
         """
-        :param samples:
-        :param sample_id:
-        :return:
+        :param samples: a list of Sample objects
+        :param sample_id: the id of a sample
+        :return: index number of the sample in the list
         """
-        index = -1
-        for i, sample in enumerate(samples):
-            if sample_id == sample.get_id():
-                index = i
-                break
-        return index
+        index = -1                                                                  # -1 if sample id does not exist
+        for i, sample in enumerate(samples):                                        # For each sample
+            if sample_id == sample.get_id():                                        # If the sample id matches
+                index = i                                                           # Note the sample index
+                break                                                               # Break
+        return index                                                                # Return the sample index
 
     @staticmethod
-    def _to_arrays(data, shape):
+    def _list_to_arrays(data, shape):
         """
         :param data: list of lists containing the cell image and its label
         :param shape: tuple to describe the expected image shape
@@ -325,23 +319,23 @@ class DiagnosisSystem(object):
         y = np.empty((len(data), 1), dtype=np.uint8)                                # Init labels array
         x = np.zeros((len(data), shape[0], shape[1], shape[2]), dtype=np.uint8)     # Init data array
         for i, (image, label) in enumerate(data):                                   # Put data into numpy arrays
-            height, width, depth = image.shape
+            height, width, depth = image.shape                                      # Get the image shape
             x[i, 0:height, 0:width, 0:depth] = image                                # x contains images
             y[i] = label                                                            # y contains labels
         return x, y
 
     @staticmethod
-    def _to_array(cells, shape):
+    def _cells_to_arrays(cells, shape):
         """
         :param cells: list of cell objects
         :param shape: tuple to describe the expected shape of the images
         :return: numpy array of cell images
         """
-        x = np.empty((len(cells), shape[0], shape[1], shape[2]), dtype=np.uint8)            # Init array to store images
-        for i, cell in enumerate(cells):                                                    # For each cell
-            cell_image = cell.get_image(dx=shape[0], dy=shape[1])                           # Get the cell image
-            width, height, depth = cell_image.shape                                         # Get image dimensions
-            x[i, 0:width, 0:height, 0:depth] = cell_image                                   # Add cell to the array
+        x = np.empty((len(cells), shape[0], shape[1], shape[2]), dtype=np.uint8)    # Init array to store images
+        for i, cell in enumerate(cells):                                            # For each cell
+            cell_image = cell.get_image(dx=shape[0], dy=shape[1])                   # Get the cell image
+            width, height, depth = cell_image.shape                                 # Get image dimensions
+            x[i, 0:width, 0:height, 0:depth] = cell_image                           # Add cell to the array
         return x
 
     @staticmethod
@@ -362,7 +356,7 @@ class DiagnosisSystem(object):
         """
         Checks that file paths are valid image and removes non jpg/png files
         :param image_paths: List of paths to images
-        :return: List of paths to images
+        :return: list of paths to images
         """
         images = []                                                                 # List to store image paths
         for path in image_paths:                                                    # For each image_path
@@ -376,11 +370,10 @@ class DiagnosisSystem(object):
     def _save_image(image, image_name, destination):
         """
         Saves the image in a given directory
-        creates the directory if it does not already exist
+        Creates the directory if it does not already exist
         :param image: image to save
         :param image_name: name to save image as
         :param destination: directory to save image in
-        :return:
         """
         directories = destination.split("/")                                        # Get list of directories
         path = ""                                                                   # Init path string
@@ -393,8 +386,8 @@ class DiagnosisSystem(object):
     @staticmethod
     def _get_yaml_dict(yaml_path):
         """
-        :param yaml_path:
-        :return:
+        :param yaml_path: path to a yaml file
+        :return: dictionary containing the contents of the yaml fle
         """
         yaml_dict = {}                                                              # Initialise yaml_dict
         if os.path.isfile(yaml_path):                                               # If the file exists
@@ -405,8 +398,8 @@ class DiagnosisSystem(object):
         return yaml_dict
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.yaml")
-    arguments = parser.parse_args()
-    main(arguments)
+    parser = argparse.ArgumentParser()                                              # Initialise the parser
+    parser.add_argument("--config", default="config.yaml")                          # Add an argument for config
+    arguments = parser.parse_args()                                                 # Get the arguments
+    main(arguments)                                                                 # Run the diagnosis system
 

@@ -52,12 +52,14 @@ class CellDetector(object):
         img = image.get_image()                                                 # Get the image
         img = self._pre_process(img)                                            # Pre-process for Hough Circles
         circles = self._hough_circles(img)                                      # Detect circles
+        i = 0
         for circle in circles:                                                  # For every circle
             coverage = self._get_coverage(img, circle)                          # Check coverage of each circle
             if coverage > self._area_threshold:                                 # If coverage is above the threshold
-                cell = Cell(circle[0:2], circle[2], image.get_path())
+                cell = Cell(circle[0:2], circle[2], image.get_path(), i)
                 cell.set_complete(self._is_complete(img.shape, cell))
                 cells.append(cell)                                              # Append a new cell object
+                i += 1
         print(str(len(cells)) + " cells found.")
         return cells
 
