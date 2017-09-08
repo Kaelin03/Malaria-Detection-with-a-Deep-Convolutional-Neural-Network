@@ -5,23 +5,29 @@ import cv2
 
 class Cell(object):
 
-    def __init__(self, position, radius, path, nb):
+    def __init__(self, position, radius):
         """
         :param position:
         :param radius:
-        :param path:
         """
-        self._nb = nb
+        self._position = tuple(map(int, position))
+        self._radius = int(radius)
+        self._path = None
+        self._sample_id = None
+        self._image_id = None
+        self._id = None
+        self._prediction = None
+        self._confidence = None
+        self._label = None
+
+    def set_id(self, path, nb):
+        """
+        :return:
+        """
         self._path = path
         self._id = path.split("/")[-1].split(".")[0] + "_" + str(nb)
         self._sample_id = self._id.split("_")[0]
         self._image_id = self._id.split("_")[1]
-        self._position = tuple(map(int, position))
-        self._radius = int(radius)
-        self._complete = None
-        self._prediction = None
-        self._confidence = None
-        self._label = None
 
     def get_image(self, dx=0, dy=0):
         """
@@ -49,12 +55,6 @@ class Cell(object):
         """
         return self._id
 
-    def get_nb(self):
-        """
-        :return:
-        """
-        return self._nb
-
     def get_sample_id(self):
         """
         :return:
@@ -79,7 +79,12 @@ class Cell(object):
                 col = (0, 255, 0)
             elif self._prediction == 1:
                 col = (0, 0, 255)
-        cv2.circle(image, self._position, self._radius, col, width)
+            else:
+                col = (0, 0, 0)
+        # cv2.circle(image, self._position, self._radius, col, width)
+        p1 = self._position[0] - 40, self._position[1] - 40
+        p2 = self._position[0] + 40, self._position[1] + 40
+        cv2.rectangle(image, p1, p2, col, width)
 
     def get_position(self):
         """
@@ -118,19 +123,6 @@ class Cell(object):
         :return:
         """
         self._label = label
-
-    def set_complete(self, complete):
-        """
-        :param complete:
-        :return:
-        """
-        self._complete = complete
-
-    def is_complete(self):
-        """
-        :return:
-        """
-        return self._complete
 
     def set_confidence(self, confidence):
         """

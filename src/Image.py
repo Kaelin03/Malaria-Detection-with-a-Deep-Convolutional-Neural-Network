@@ -31,6 +31,7 @@ class Image(object):
         :param cell:
         :return:
         """
+        cell.set_id(self._path, len(self._cells))
         self._cells.append(cell)
 
     def total_cells(self, prediction=None):
@@ -47,17 +48,13 @@ class Image(object):
         :param cells:
         :return:
         """
-        for cell in cells:
-            self.add_cell(cell)
+        [self.add_cell(cell) for cell in cells]
 
-    def get_cells(self, complete=False):
+    def get_cells(self):
         """
         :return:
         """
-        if complete:
-            return [cell for cell in self._cells if cell.is_complete()]
-        else:
-            return self._cells
+        return self._cells
 
     def get_id(self):
         """

@@ -16,11 +16,12 @@ labels:
 
 files:
     # Paths to individual images for classification (list of strings)
-    - "samples/train/57549/57549_04.jpg"
+    - "samples/test/57503/57503_01.jpg"
+
 
 destination:
     # Destination path for classified images (string)
-    "cells/train"
+    "training_sets/cells"
 
 cell_detector:
     # Parameters for cell detector
@@ -46,5 +47,5 @@ cell_detector:
         10
         
     area_threshold:
-        # Percentage of the circle that should contant a cell (float)
+        # Percentage of the circle that should contain cell (float)
         65

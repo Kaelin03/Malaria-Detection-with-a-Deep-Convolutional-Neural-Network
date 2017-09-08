@@ -1,8 +1,14 @@
 .idea
 results
+Data
+data
+outputs
+test
 cells
 models
 samples
+training_sets
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

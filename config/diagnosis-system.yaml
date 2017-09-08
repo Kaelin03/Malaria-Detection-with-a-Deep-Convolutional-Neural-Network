@@ -24,33 +24,55 @@ cell_detector:
         10
 
     area_threshold:
-        # Percentage of the circle that should contant a cell (float)
+        # Percentage of the circle that should contain cell (float)
         65
+
+    labels:
+        0:
+            - "cells/not_rot"
+            - "cells/not_aug"
+
+        1:
+            - "cells/healthy/57549/57549_01"
+            - "cells/healthy/57513/57513_01"
+            - "cells/healthy/57539/57539_01"
+            - "cells/healthy/57545/57545_01"
+            - "cells/healthy/57546/57546_01"
 
 neural_network:
     # Parameters for the neural network
     batch_size:     
         # Number of training examples to consider in each iteration (int)
-        32
+        64
+
+    n_batches:
+        # Number of batches to split entire training set into (int)
+        # Each batched is used for training once, then batches are randomised
+        10
 
     epochs:     
         # Number of times to iterate over tge entire training set (int)
-        2
+        100
+
+    init:
+        "he_normal"
 
     kernel_size:    
         # Kernel size to be used throughout (list of ints)
-        - 3
-        - 3
-        - 3
-        - 3
-        - 3
-        - 3
+        - 4
+        - 4
+        - 5
+        - 5
+        - 5
+        - 5
 
     hidden_size:    
         # Number of nerons in the fully-connected layer (list of ints)
-        - 512
+        - 1024
+        - 1024
+        - 1024
 
-    pool_size:     
+    pool_size:
          # Pooling size to be used throughout (list of ints)
         - 2
         - 2
@@ -60,21 +82,23 @@ neural_network:
         # Number of filters in the convolutional layer (list of ints)
         - 32
         - 32
-        - 32
-        - 32
-        - 32
-        - 32
+        - 64
+        - 64
+        - 128
+        - 128
 
     drop_prob:
-        # Probability of a node droping out when training (list of ints)
+        # Probability of a node dropping out when training (list of ints)
         - 0.25        
         - 0.25
         - 0.25
-        - 0.5 
+        - 0.5
+        - 0.5
+        - 0.5
 
     learn_rate:
         # Learning rate (float)
-        0.00001
+        0.000001
 
     augment:
         # To augment data or not (bool)
@@ -99,73 +123,26 @@ images:
         3
 
 train:
-    # Labels and images for training the CNN
-    labels:
-        0:
-            directories:
-                # Paths to directories of images (list of strings)
-                - "cells/train/healthy/57546/57546_01"
+    0:
+        - "cells/healthy_bal/57502"
 
-        1:
-            directories:
-                # Paths to directories of images (list of strings)
-                - "cells/train/falciparum/57546/57546_01"
-                - "cells/train/falciparum/57546/57546_02"
-                - "cells/train/falciparum/57546/57546_03"
-                - "cells/train/falciparum/57546/57546_04"
-                - "cells/train/falciparum/57546/57546_05"
-                - "cells/train/falciparum/57546/57546_06"
-                - "cells/train/falciparum/57546/57546_07"
-                - "cells/train/falciparum/57546/57546_08"
-                - "cells/train/falciparum/57546/57546_09"
-                - "cells/train/falciparum/57546/57546_10"
-                - "cells/train/falciparum/57546/57546_11"
-                - "cells/train/falciparum/57546/57546_12"
-                - "cells/train/falciparum/57546/57546_13"
-                - "cells/train/falciparum/57546/57546_14"
-                - "cells/train/falciparum/57546/57546_15"
-                - "cells/train/falciparum/57546/57546_16"
-                - "cells/train/falciparum/57546/57546_17"
-                - "cells/train/falciparum/57546/57546_18"
-                - "cells/train/falciparum/57546/57546_19"
-                - "cells/train/falciparum/57546/57546_20"
-                - "cells/train/falciparum/57546/57546_21"
-                - "cells/train/falciparum/57546/57546_22"
-                - "cells/train/falciparum/57546/57546_23"
-                - "cells/train/falciparum/57546/57546_24"
+    1:
+        - "cells/falciparum_bal/57502"
 
 evaluate:
     # Labels must be ints starting from 0 (for one-hot encoding)
-    labels:
-        0:
-            directories:
-                # Paths to directories of images (list)
-                - "test/cells/healthy/57546_17"
-                - "test/cells/healthy/57546_18"
-                - "test/cells/healthy/57546_19"
-                - "test/cells/healthy/57546_20"
-                - "test/cells/healthy/57546_21"
-                - "test/cells/healthy/57546_22"
-                - "test/cells/healthy/57546_23"
-                - "test/cells/healthy/57546_24"
+    0:
+        - "cells/healthy/57517"
 
-        1:
-            directories:
-                # Paths to directories of images (list)
-                - "test/cells/falciparum/57546_17"
-                - "test/cells/falciparum/57546_18"
-                - "test/cells/falciparum/57546_19"
-                - "test/cells/falciparum/57546_20"
-                - "test/cells/falciparum/57546_21"
-                - "test/cells/falciparum/57546_22"
-                - "test/cells/falciparum/57546_23"
-                - "test/cells/falciparum/57546_24"
+    1:
+        - "cells/falciparum/57517"
+
 
 diagnose:
     # Paths to directory of images that require diagnosis (list of strings)
-    directories: 
-        - "samples/test/57549"
+    directories:
+        - ""
 
     destination: 
     # Paths to directory to which results will be saved (string)
-        "results"
+        "cells"

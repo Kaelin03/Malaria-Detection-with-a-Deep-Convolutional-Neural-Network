@@ -9,12 +9,18 @@ from keras.layers import Dropout                                # For dropout la
 from keras.layers import Flatten                                # For converting to 1D
 from keras.utils import plot_model                              # For graphical representation of model
 from keras.utils import np_utils                                # Utilities for one-hot encoding of ground truth values
-from keras.preprocessing.image import ImageDataGenerator        # For data augmentation
 from keras.optimizers import rmsprop
 import matplotlib.pyplot as plt
+
 import numpy as np
-import yaml
+import pandas as pd
+import random
+import copy
+import math
+import cv2
 import os
+
+import helpers
 
 
 class NeuralNetwork(object):
@@ -25,325 +31,525 @@ class NeuralNetwork(object):
         :param yaml_path: path to the configuration file
         """
         self._yaml_path = "../config/" + yaml_path
-        self._name = ""
+        self._name = None
+        self._history = None
         self._kernel_size = None
         self._batch_size = None
+        self._train_batches = None
+        self._evaluate_batches = None
         self._augment = None
+        self._channel_shift = None
         self._drop_prob = None
         self._conv_depth = None
         self._hidden_size = None
         self._learn_rate = None
-        self._epochs = None
         self._pool_size = None
         self._activation = None
         self._model = None
-        self._history = None
-        self._train_size = None
+        self._epochs = None
+        self._init = None
+        self._threshold = None
+        self._image_shape = None
+        self._classes = None
+        self._train_data = None
+        self._evaluate_data = None
         self.update_config()
-
-    def is_ready(self):
-        if self._model is None:
-            return False
-        else:
-            return True
-
-    def get_name(self):
-        """
-        :return:
-        """
-        return self._name
 
     def update_config(self):
-        """
-        Updates all attributes as per the given configuration file
-        :return: None
-        """
-        try:
-            config = self._get_yaml_dict(self._yaml_path)["neural_network"]
-            self._kernel_size = [(value, value) for value in config["kernel_size"]]
-            self._batch_size = config["batch_size"]
-            self._augment = config["augment"]
-            self._drop_prob = config["drop_prob"]
-            self._conv_depth = config["conv_depth"]
-            self._hidden_size = config["hidden_size"]
-            self._learn_rate = config["learn_rate"]
-            self._epochs = config["epochs"]
-            self._activation = config["activation"]
-            self._pool_size = [(value, value) for value in config["pool_size"]]
-        except KeyError:
-            print("Warning: Some entries were missing from the neural_network configurations.")
-            
-    def train(self, x, y):
-        """
-        :param x: training images
-        :param y: corresponding labels
-        :return: None
-        """
+        config = helpers.load_yaml(self._yaml_path)
+        self._kernel_size = [(value, value) for value in config["neural_network"]["kernel_size"]]
+        self._epochs = config["neural_network"]["epochs"]
+        self._train_batches = config["train"]["batches"]
+        self._evaluate_batches = config["evaluate"]["batches"]
+        self._batch_size = config["neural_network"]["batch_size"]
+        self._drop_prob = config["neural_network"]["drop_prob"]
+        self._conv_depth = config["neural_network"]["conv_depth"]
+        self._hidden_size = config["neural_network"]["hidden_size"]
+        self._learn_rate = config["neural_network"]["learn_rate"]
+        self._activation = config["neural_network"]["activation"]
+        self._augment = config["neural_network"]["augment"]
+        self._threshold = config["evaluate"]["threshold"]
+        self._channel_shift = config["neural_network"]["channel_shift"]
+        self._init = config["neural_network"]["init"]
+        self._pool_size = [(value, value) for value in config["neural_network"]["pool_size"]]
+        self._train_data = "../" + config["train"]["data"]
+        self._evaluate_data = config["evaluate"]["data"]
+        self._classes = config["classes"]
+        self._image_shape = (config["images"]["height"],
+                             config["images"]["width"],
+                             config["images"]["depth"])
+        self.reset_history()
+
+    def train(self):
         self.update_config()
-        num_classes = np.unique(y).shape[0]                                         # Find the number of classes
-        image_shape = x.shape[1:4]                                                  # Get the image shape
-        self.compile_model(image_shape, num_classes)                                # Compile the model
-        self._train_size = [y[np.where(y == label)].shape[0] for label in range(num_classes)]
-        y = np_utils.to_categorical(y=y, num_classes=num_classes)                   # One-hot encode the labels
-        if self._augment:
-            print("Warning: augment option not available yet.")
-        else:
-            self._history = self._model.fit(x=x, y=y,
-                                            batch_size=self._batch_size,
-                                            epochs=self._epochs,
-                                            verbose=1,
-                                            validation_split=0.1)                       # Train the CNN
-        while True:
-            self._name = input("Please enter a name for the model:\n")
-            if self._name != "":
-                break
-        self.save_all()
-
-    def save_all(self):
-        """
-        :return:
-        """
-        self.save_model()
-        self.save_parameters()
+        if self._model is None:
+            self.compile_model()
+        self._name = input("Enter a name for the model:\n")
         self.draw_model()
-        self.save_history()
-        self.plot_history()
+        image_paths = self.get_image_paths()
+        X, Y = self.get_data(image_paths)
+        try:
+            max_val_acc = 0.75
+            for epoch in range(self._epochs):
+                X, Y = helpers.shuffle_arrays(X, Y)
+                for batch in range(self._train_batches):
+                    e = epoch + batch / self._train_batches
+                    print("Epoch " + str(e) + "/" + str(self._epochs))
+                    x, y = self.get_batch(X, Y, batch, self._train_batches)
+                    if self._augment:
+                        x = self.augment(x, self._channel_shift)
+                    x = self.normalise(x)
+                    y = np_utils.to_categorical(y, len(self._classes))
+                    self.store_history(self._model.fit(x, y,
+                                                       batch_size=self._batch_size,
+                                                       epochs=1,
+                                                       verbose=1,
+                                                       validation_split=0.1), e)
+                    self.update_plot()
+                    if self._history["val_acc"][-1] > max_val_acc:
+                        max_val_acc = self._history["val_acc"][-1]
+                        self.save_model()
+        except KeyboardInterrupt:
+            print("\nWarning: training interrupted!")
+        while True:
+            option = input("Would you like to save the model now? y/n")
+            if option == "y":
+                self.save_model()
+                break
+            if option == "n":
+                break
 
-    def evaluate(self, x, y, num_classes=0):
-        """
-        If number of classes is zero, the number of classes will be deduced from the given labels
-        :param x: test images
-        :param y: corresponding labels
-        :param num_classes: number of classes
-        :return:
-        """
+    def evaluate(self):
+        self.update_config()
         if self._model is not None:
-            if not num_classes:
-                num_classes = np.unique(y).shape[0]                                     # Find the number of classes
-            y = np_utils.to_categorical(y=y, num_classes=num_classes)                   # One-hot encode the labels
-            scores = self._model.evaluate(x=x,
-                                          y=y,
-                                          verbose=0)                                    # Evaluate using test data
-            print("Class " + str(int(np.where(y[0] == 1)[0])) + ":")
-            print("\tNumber of images:" + str(x.shape[0]))
-            for name, score in zip(*(self._model.metrics_names, scores)):               # Print out scores
-                print("\t" + name + ": " + str(round(score, 5)))
+            total = {"tp": 0, "tn": 0, "fp": 0, "fn": 0, "n": 0, "p": 0, "t": 0, "f": 0}
+            for directory in self._evaluate_data:
+                summary = self.set_summary()
+                image_paths = self.get_image_paths2("../" + directory)
+                X, Y = self.get_data(image_paths)
+                image_paths = [path for paths in image_paths for path in paths]
+                print("Evaluating dataset")
+                with open("../results/cell_data/" + directory.split("/")[-1] + ".csv", "w") as file:
+                    file.write("cell path,status,confidence\n")
+                count = 0
+                helpers.progress_bar(0, self._evaluate_batches,
+                                     prefix="Progress", suffix="Complete", length=30, fill="=")
+                for batch in range(self._evaluate_batches):
+                    x, y = self.get_batch(X, Y, batch, self._evaluate_batches)
+                    # x = self.normalise(x)
+                    x /= 255
+                    predictions = self._model.predict(x,
+                                                      batch_size=self._batch_size,
+                                                      verbose=0)
+                    for label, prediction in zip(y, predictions):
+                        status = self.get_status(label, self.get_prediction(prediction, self._threshold))
+                        summary[status] += 1
+                        with open("../results/cell_data/" + directory.split("/")[-1] + ".csv", "a") as file:
+                            file.write(",".join([image_paths[count], status, str(prediction[1])]) + "\n")
+                        count += 1
+                    helpers.progress_bar(batch + 1, self._evaluate_batches,
+                                         prefix="Progress", suffix="Complete", length=30, fill="=")
+                summary["sample"] = directory.split("/")[-1]
+                try:
+                    summary["sensitivity"] = summary["tp"] / (summary["tp"] + summary["fn"])
+                except ZeroDivisionError:
+                    print("Warning: no positive cases.")
+                try:
+                    summary["specificity"] = summary["tn"] / (summary["tn"] + summary["fp"])
+                except ZeroDivisionError:
+                    print("Warning: no negative cases.")
+                print(summary)
+                total["tp"] += summary["tp"]
+                total["fp"] += summary["fp"]
+                total["tn"] += summary["tn"]
+                total["fn"] += summary["fn"]
+            total["n"] = total["tn"] + total["fp"]
+            total["p"] = total["tp"] + total["fn"]
+            total["t"] = total["tp"] + total["tn"]
+            total["f"] = total["fp"] + total["fn"]
+            print(total)
         else:
-            print("Warning: model is not yet compiled.")
+            print("Warning: no model configured.")
 
-    def draw_model(self):
-        """
-        Saves a diagram of the model
-        :return: None
-        """
+    def evaluate_for_all_thresholds(self, steps=21):
+        self.update_config()
         if self._model is not None:
-            directory = "../models/diagrams"                                    # Set destination directory
-            self._make_path(directory)                                          # Make destination directory
-            model_name = self._name + ".png"
-            plot_model(self._model,
-                       to_file=directory + "/" + model_name,
-                       show_shapes=True,
-                       show_layer_names=False)                                  # Save a plot of the model
-            print("Diagram saved to " + directory + "/" + model_name + ".")     # Feed back for user
+            data = {"Threshold": [],
+                    "TN": [], "TP": [], "FN": [], "FP": [],
+                    "N": [], "P": [], "T": [], "F": [],
+                    "TNR": [], "FNR": [], "TPR": [], "FPR": [],
+                    "PPV": [], "NPV": [],
+                    "LRp": [], "LRn": [],
+                    "ACC": [], "F1": [],
+                    "MCC": [], "Informedness": [], "Markedness": []}
+            for threshold in np.linspace(0, 1, steps):
+                print("Threshold: " + str(threshold))
+                summary = {"tn": 0, "tp": 0, "fn": 0, "fp": 0}
+                for directory in self._evaluate_data:
+                    image_paths = self.get_image_paths2("../" + directory)
+                    X, Y = self.get_data(image_paths)
+                    print("Evaluating dataset")
+                    helpers.progress_bar(0, self._evaluate_batches,
+                                         prefix="Progress", suffix="Complete", length=30, fill="=")
+                    for batch in range(self._evaluate_batches):
+                        x, y = self.get_batch(X, Y, batch, self._evaluate_batches)
+                        # x = self.normalise(x)
+                        x /= 255
+                        predictions = self._model.predict(x,
+                                                          batch_size=self._batch_size,
+                                                          verbose=0)
+                        for label, prediction in zip(y, predictions):
+                            status = self.get_status(label, self.get_prediction(prediction, threshold))
+                            summary[status] += 1
+                        helpers.progress_bar(batch + 1, self._evaluate_batches,
+                                             prefix="Progress", suffix="Complete", length=30, fill="=")
+                data["Threshold"].append(threshold)
+                data = self.fill_data(data, summary)
+            data = pd.DataFrame.from_dict(data)
+            data.to_csv("../data.csv", sep=",")
         else:
-            print("Warning: model not compiled yet.")                           # Feed back for user
-
-    def plot_history(self):
-        """
-        Saves a plot of the acc and loss
-        :return: None
-        """
-        if self._model is not None:
-            directory = "../models/plots"
-            self._make_path(directory)
-            loss = self._history.history["loss"]
-            val_loss = self._history.history["val_loss"]
-            acc = self._history.history["acc"]
-            val_acc = self._history.history["val_acc"]
-            plt.figure(1)
-            plt.subplot(121)
-            plt.plot(acc, "red", label="Accuracy")
-            plt.plot(val_acc, "blue", label="Validation accuracy")
-            plt.legend(loc=0, frameon=False)
-            plt.ylabel("Accuracy")
-            plt.xlabel("Epoch")
-            plt.grid()
-            plt.subplot(122)
-            plt.plot(loss, "red", label="Training loss")
-            plt.plot(val_loss, "blue", label="Validation loss")
-            plt.legend(loc=0, frameon=False)
-            plt.ylabel("Loss")
-            plt.xlabel("Epoch")
-            plt.grid()
-            plot_name = self._name + ".png"
-            plt.savefig(directory + "/" + plot_name)
-            print("Plot saved to " + directory + "/" + plot_name)
-            plt.show()
-
-    def save_parameters(self):
-        """
-        :return:
-        """
-        directory = "../models/parameters"
-        self._make_path(directory)
-        filename = self._name + ".txt"
-        file = open(directory + "/" + filename, "w")
-        file.write("Name: " + self._name + "\n")
-        file.write("Epochs: " + str(self._epochs) + "\n")
-        file.write("Kernel size: " + str(self._kernel_size) + "\n")
-        file.write("Hidden size: " + str(self._hidden_size) + "\n")
-        file.write("Pool size: " + str(self._pool_size) + "\n")
-        file.write("Conv depth: " + str(self._conv_depth) + "\n")
-        file.write("Drop prob: " + str(self._drop_prob) + "\n")
-        file.write("Learn rate: " + str(self._learn_rate) + "\n")
-        file.write("Augment: " + str(self._augment) + "\n")
-        file.write("Activation: " + str(self._activation) + "\n")
-        file.write("Train size: " + str(self._train_size) + "\n\n")
-        file.close()
-        print("Record of parameters saved to " + directory + "/" + filename)
-
-    def save_history(self):
-        """
-        :return:
-        """
-        directory = "../models/history"                                         # Set destination directory
-        self._make_path(directory)                                              # Make destination directory
-        filename = self._name + ".csv"
-        file = open(directory + "/" + filename, "w")                            # Open file
-        keys = [key for key in self._history.history]                           # For each key in the history dict
-        epochs = len(self._history.history[keys[0]])                            # Get the total number of epochs
-        file.write(",".join(keys) + "\n")                                       # Make a comma sep. string from keys
-        for i in range(epochs):
-            data = [self._history.history[key][i] for key in keys]              # Get all data for a given epoch
-            data = ",".join(list(map(str, data)))                               # Convert to comma separated string
-            file.write(data + "\n")                                             # Write to file
-        file.close()
-        print("History saved to " + directory + "/" + filename + ".")           # Feed back for user
-
-    def save_model(self):
-        """
-        Saves the model
-        :return: None
-        """
-        if self._model is not None:
-            directory = "../models"
-            self._make_path(directory)
-            model_name = self._name
-            if model_name[-3] != ".h5":                                             # If extension not given
-                model_name += ".h5"                                                 # Add extension
-            self._model.save(filepath=directory + "/" + model_name)                 # Save model
-            print("Model saved to " + directory + "/" + model_name + ".")
-        else:
-            print("Warning: model not compiled yet.")
-
-    def load_model(self):
-        """
-        Loads a model from user input
-        :return: None
-        """
-        model_name = input("Enter the model name:\n")
-        directory = "../models"
-        if model_name[-3] != ".h5":
-            model_name += ".h5"
-        if os.path.isfile(directory + "/" + model_name):
-            self._model = load_model(directory + "/" + model_name)
-            self._name = model_name[0:-3]
-            print("Successfully loaded " + model_name + ".")
-        else:
-            print("Warning: " + directory + "/" + model_name + " not found.")
+            print("Warning: model not configured.")
 
     def predict(self, x):
-        """
-        :param x: images
-        :return: predicted labels for given images
-        """
-        predictions = self._model.predict(x, verbose=1)
+        x /= 255
+        predictions = self._model.predict(x,
+                                          batch_size=self._batch_size,
+                                          verbose=1)
         return predictions
 
-    def compile_model(self, image_shape, num_classes):
-        """
-        :param image_shape: shape of input images
-        :param num_classes: number of classes
-        :return:
-        """
+    @staticmethod
+    def fill_data(data, summary):
+        tp = summary["tp"]
+        tn = summary["tn"]
+        fn = summary["fn"]
+        fp = summary["fp"]
+        data["TN"].append(tn)
+        data["TP"].append(tp)
+        data["FN"].append(fn)
+        data["FP"].append(fp)
+        data["N"].append(tn + fp)
+        data["P"].append(tp + fn)
+        data["T"].append(tn + tp)
+        data["F"].append(fn + fp)
+        try:
+            data["TNR"].append(tn / (tn + fp))
+        except ZeroDivisionError:
+            data["TNR"].append("nan")
+        try:
+            data["FNR"].append(fn / (fn + tp))
+        except ZeroDivisionError:
+            data["FNR"].append("nan")
+        try:
+            data["TPR"].append(tp / (tp + fn))
+        except ZeroDivisionError:
+            data["FPR"].append("nan")
+        try:
+            data["FPR"].append(fp / (fp + tn))
+        except ZeroDivisionError:
+            data["FPR"].append("nan")
+        try:
+            data["PPV"].append(tp / (tp + fp))
+        except ZeroDivisionError:
+            data["PPV"].append("nan")
+        try:
+            data["NPV"].append(tn / (tn + fn))
+        except ZeroDivisionError:
+            data["NPV"].append("nan")
+        try:
+            data["LRp"].append((tp / (tp + fn)) / (1 - (tn / (tn + fp))))
+        except ZeroDivisionError:
+            data["LRp"].append("nan")
+        try:
+            data["LRn"].append((1 - (tp / (tp / fn))) / (tn / (tn + fp)))
+        except ZeroDivisionError:
+            data["LRn"].append("nan")
+        try:
+            data["ACC"].append((tp + tn) / (tp + fp + tn + fn))
+        except ZeroDivisionError:
+            data["ACC"].append("nan")
+        try:
+            data["F1"].append(2 * tp / (2 * tp + fp + fn))
+        except ZeroDivisionError:
+            data["F1"].append("nan")
+        try:
+            data["MCC"].append((tp * tn - fp * fn) / math.sqrt((tp + fp) * (tp + fn) * (fn + fp) * (tn + fn)))
+        except ZeroDivisionError:
+            data["MCC"].append("nan")
+        try:
+            data["Informedness"].append(tp / (tp + fn) + tn / (tn + fp) - 1)
+        except ZeroDivisionError:
+            data["Informedness"].append("nan")
+        try:
+            data["Markedness"].append(tp / (tp + fp) + tn / (tn + fn) - 1)
+        except ZeroDivisionError:
+            data["Markedness"].append("nan")
+        return data
+
+    @staticmethod
+    def get_prediction(prediction, threshold):
+        if prediction[1] > threshold:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def set_summary():
+        return {"sample": None,
+                "tn": 0, "tp": 0, "fn": 0, "fp": 0,
+                "sensitivity": None,
+                "specificity": None}
+
+    @staticmethod
+    def get_status(label, prediction):
+        if label == prediction and label == 0:
+            return "tn"
+        elif label == prediction and label == 1:
+            return "tp"
+        elif label != prediction and label == 0:
+            return "fp"
+        elif label != prediction and label == 1:
+            return "fn"
+        else:
+            return "N/A"
+
+    def save_model(self):
+        directory = "../models/" + self._name
+        file_name = self._name + ".h5"
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+        self._model.save(directory + "/" + file_name)
+        print("Model saved to " + directory + "/" + file_name + ".")
+
+    def load_model(self):
+        model_name = input("Enter the model name:\n")
+        directory = "../models/" + model_name.split(".")[0]
+        if model_name[-3] != ".h5":
+            model_name += ".h5"
+        try:
+            self._model = load_model(directory + "/" + model_name)
+            print("Successfully loaded " + model_name + ".")
+        except OSError:
+            print("Warning: " + directory + "/" + model_name + " not found.")
+
+    def save_plot(self):
+        directory = "../models/" + self._name
+        file_name = "history.png"
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+        plt.savefig(directory + "/" + file_name)
+        print("Plot saved to " + directory + "/" + file_name)
+        plt.show()
+
+    def update_plot(self):
+        plt.clf()
+        loss = self._history["loss"]
+        val_loss = self._history["val_loss"]
+        acc = self._history["acc"]
+        val_acc = self._history["val_acc"]
+        epoch = self._history["epoch"]
+        plt.figure(1)
+        plt.subplot(121)
+        plt.plot(epoch, acc, "red", label="Training Accuracy")
+        plt.plot(epoch, val_acc, "blue", label="Validation accuracy")
+        plt.legend(loc=0, frameon=False)
+        plt.ylabel("Accuracy")
+        plt.xlabel("Epoch")
+        plt.ylim([0, 1])
+        plt.xlim([0, self._epochs])
+        plt.grid()
+        plt.subplot(122)
+        plt.plot(epoch, loss, "red", label="Training loss")
+        plt.plot(epoch, val_loss, "blue", label="Validation loss")
+        plt.legend(loc=0, frameon=False)
+        plt.ylabel("Loss")
+        plt.xlabel("Epoch")
+        plt.ylim([0, 1])
+        plt.xlim([0, self._epochs])
+        plt.grid()
+        plt.pause(0.25)
+
+    def draw_model(self, ):
+        directory = "../models/" + self._name
+        file_name = self._name + ".png"
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+        try:
+            plot_model(self._model,
+                       to_file=directory + "/" + file_name,
+                       show_shapes=True,
+                       show_layer_names=False)
+            print("Diagram saved to " + directory + "/" + file_name + ".")
+        except:
+            print("Warning: unable to draw model.")
+
+    def save_history(self):
+        directory = "../models/" + self._name
+        file_name = "history.csv"
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+        file = open(directory + "/" + file_name, "w")
+        keys = [key for key in self._history]
+        epochs = len(self._history[keys[0]])
+        file.write(",".join(keys) + "\n")
+        for i in range(epochs):
+            data = [self._history[key][i] for key in keys]
+            data = ",".join(list(map(str, data)))
+            file.write(data + "\n")
+        file.close()
+        print("History saved to " + directory + "/" + file_name + ".")
+
+    def store_history(self, episode, epoch):
+        self._history["acc"].append(episode.history["acc"][0])
+        self._history["val_acc"].append(episode.history["val_acc"][0])
+        self._history["loss"].append(episode.history["loss"][0])
+        self._history["val_loss"].append(episode.history["val_loss"][0])
+        self._history["epoch"].append(epoch)
+
+    def reset_history(self):
+        self._history = {"epoch": [],
+                         "acc": [],
+                         "loss": [],
+                         "val_acc": [],
+                         "val_loss": []}
+
+    @staticmethod
+    def normalise(x):
+        return (x - 127.5) / 127.5
+
+    @staticmethod
+    def augment(x, channel_shift):
+        print("Performing channel shifts...")
+        helpers.progress_bar(0, x.shape[0], prefix="Progress", suffix="Complete", length=30, fill="=")
+        for row in range(x.shape[0]):
+            for ch in range(x.shape[3]):
+                x[row] += random.randrange(channel_shift[0], channel_shift[1])
+            helpers.progress_bar(row + 1, x.shape[0], prefix="Progress", suffix="Complete", length=30, fill="=")
+        x[x > 255] = 255
+        x[x < 0] = 0
+        return x
+
+    @staticmethod
+    def get_batch(X, Y, batch, n_batches):
+        n = Y.shape[0]
+        lower = batch * n // n_batches
+        upper = (batch + 1) * n // n_batches
+        x = copy.deepcopy(X[lower:upper])
+        y = copy.deepcopy(Y[lower:upper])
+        x = x.astype(np.float32)
+        return x, y
+
+    def get_data(self, image_paths):
+        n = sum([len(paths) for paths in image_paths])
+        x = np.empty((n,
+                      self._image_shape[0],
+                      self._image_shape[1],
+                      self._image_shape[2]), dtype=np.uint8)
+        y = np.empty((n, 1), dtype=np.uint8)
+        row = 0
+        for label, paths in enumerate(image_paths):
+            print("Loading images from class " + str(label))
+            l = len(paths)
+            helpers.progress_bar(0, l, prefix="Progress", suffix="Complete", length=30, fill="=")
+            for i, path in enumerate(paths):
+                y[row] = label
+                x[row] = cv2.imread(path)
+                row += 1
+                helpers.progress_bar(i + 1, l, prefix="Progress", suffix="Complete", length=30, fill="=")
+        return x, y
+
+    def get_image_paths(self):
+        image_paths = [os.listdir(self._train_data + "/" + label) for label in self._classes]
+        for i, label in enumerate(self._classes):
+            image_paths[i] = [self._train_data + "/" + label + "/" + image for image in image_paths[i]]
+            # image_paths[i] = image_paths[i][0:80000]
+        return image_paths
+
+    def get_image_paths2(self, directory):
+        image_paths = [helpers.get_file_names(directory + "/" + label) for label in self._classes]
+        return image_paths
+
+    def compile_model(self):
         self._model = Sequential()
-        # Conv2D, Conv2D, Pool
+        # Conv2D, Conv2D, Pool, Dropout
         self._model.add(Conv2D(self._conv_depth[0], self._kernel_size[0],
-                               input_shape=image_shape,
-                               padding="same",
-                               activation=self._activation))
+                               input_shape=self._image_shape,
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
         self._model.add(Conv2D(self._conv_depth[1], self._kernel_size[1],
-                               padding="same",
-                               activation=self._activation))
-        self._model.add(MaxPooling2D(self._pool_size[0]))
-
-        # Dropout
-        self._model.add(Dropout(self._drop_prob[0]))
-
-        # Conv2D, Conv2D, Pool
+                               input_shape=self._image_shape,
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
         self._model.add(Conv2D(self._conv_depth[2], self._kernel_size[2],
-                               padding="same",
-                               activation=self._activation))
-        self._model.add(Conv2D(self._conv_depth[3], self._kernel_size[3],
-                               padding="same",
-                               activation=self._activation))
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        self._model.add(MaxPooling2D(self._pool_size[0]))
+        self._model.add(Dropout(self._drop_prob[0], seed=0))
+
+        # Conv2D, Conv2D, Pool, Dropout
+        self._model.add(Conv2D(self._conv_depth[2], self._kernel_size[3],
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        self._model.add(Conv2D(self._conv_depth[3], self._kernel_size[4],
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        self._model.add(Conv2D(self._conv_depth[0], self._kernel_size[5],
+                               input_shape=self._image_shape,
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
         self._model.add(MaxPooling2D(self._pool_size[1]))
+        self._model.add(Dropout(self._drop_prob[1], seed=1))
 
-        # Dropout
-        self._model.add(Dropout(self._drop_prob[1]))
-
-        # Conv2D, Conv2D, Pool
-        self._model.add(Conv2D(self._conv_depth[4], self._kernel_size[4],
-                               padding="same",
-                               activation=self._activation))
-        self._model.add(Conv2D(self._conv_depth[5], self._kernel_size[5],
-                               padding="same",
-                               activation=self._activation))
-        self._model.add(MaxPooling2D(self._pool_size[2]))
-
-        # Dropout
-        self._model.add(Dropout(self._drop_prob[2]))
+        # Conv2D, Conv2D, Pool, Dropout
+        self._model.add(Conv2D(self._conv_depth[4], self._kernel_size[6],
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        self._model.add(Conv2D(self._conv_depth[5], self._kernel_size[7],
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        self._model.add(Conv2D(self._conv_depth[0], self._kernel_size[8],
+                               input_shape=self._image_shape,
+                               padding="valid",
+                               activation=self._activation,
+                               kernel_initializer=self._init))
+        # self._model.add(MaxPooling2D(self._pool_size[2]))
+        self._model.add(Dropout(self._drop_prob[2], seed=2))
 
         # Flatten
         self._model.add(Flatten())
 
-        # Dense, Dropout, Dense
+        # Dense, Dropout
         self._model.add(Dense(self._hidden_size[0],
-                        activation=self._activation))
-        self._model.add(Dropout(self._drop_prob[3]))
-        self._model.add(Dense(num_classes,
-                        activation="softmax"))
+                              activation=self._activation,
+                              kernel_initializer=self._init))
+        self._model.add(Dropout(self._drop_prob[3], seed=4))
+        # Dense, Dropout
+        self._model.add(Dense(self._hidden_size[1],
+                              activation=self._activation,
+                              kernel_initializer=self._init))
+        self._model.add(Dropout(self._drop_prob[4], seed=5))
+
+        # Dense, Dropout
+
+        self._model.add(Dense(self._hidden_size[2],
+                              activation=self._activation,
+                              kernel_initializer=self._init))
+        self._model.add(Dropout(self._drop_prob[5], seed=6))
+
+        # Dense - softmax
+        self._model.add(Dense(len(self._classes),
+                        activation="softmax",
+                        kernel_initializer=self._init))
 
         opt = rmsprop(lr=self._learn_rate, decay=1e-6)
 
         self._model.compile(loss="categorical_crossentropy",
                             optimizer=opt,
                             metrics=["accuracy"])
-
-    @staticmethod
-    def _make_path(path):
-        """
-        :param path:
-        :return:
-        """
-        directories = path.split("/")                                           # Get list of directories
-        path = ""                                                               # Init path string
-        for directory in directories:                                           # For each directory
-            path += directory + "/"                                             # Add it to the path
-            if not os.path.isdir(path):                                         # If it does not yet exist
-                os.mkdir(path)                                                  # Make it
-
-    @staticmethod
-    def _get_yaml_dict(yaml_path):
-        """
-        :param yaml_path: path to a yaml file (string)
-        :return: contents of the yaml file (dict
-        """
-        yaml_dict = {}                                                              # Initialise yaml_dict
-        if os.path.isfile(yaml_path):                                               # If the file exists
-            with open(yaml_path) as file:                                           # Open the file
-                yaml_dict = yaml.load(file)                                         # Load the file
-        else:
-            print("Warning: " + yaml_path + " not found.")
-        return yaml_dict
-
